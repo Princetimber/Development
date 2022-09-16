@@ -12,7 +12,7 @@ param BastionSubnetObject object = {
   subnet:[
     {
       name:'azureBastionSubnet'
-      addressPrefix:'172.16.2.0/24'
+      addressPrefix:'172.16.1.0/24'
     }
   ]
 }
