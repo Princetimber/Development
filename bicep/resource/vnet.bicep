@@ -11,10 +11,50 @@ param subnets array= [
   {
     name:'gatewaySubnet'
     addressPrefix:'172.16.0.0/27'
+    serviceEndpoints:[
+      {
+      service:'Microsoft.KeyVault'
+      }
+      {
+      service:'Microsoft.Storage'
+      }
+      {
+      service:'Microsoft.AzureActiveDirectory'
+      }
+      {
+      service:'Microsoft.sql'
+      }
+      {
+      service:'Microsoft.web'
+      }
+      {
+      service:'Microsoft.ContainerRegistry'
+      }
+    ]
   }
   {
   name:'subnet0'
   addressPrefix: '172.16.1.0/24'
+  serviceEndpoints:[
+      {
+      service:'Microsoft.KeyVault'
+      }
+      {
+      service:'Microsoft.Storage'
+      }
+      {
+      service:'Microsoft.AzureActiveDirectory'
+      }
+      {
+      service:'Microsoft.sql'
+      }
+      {
+      service:'Microsoft.web'
+      }
+      {
+      service:'Microsoft.ContainerRegistry'
+      }
+    ]
   }
 ]
 param subnetname string = 'subnet0'
@@ -30,17 +70,6 @@ param settings object = {
   location:location
   addressPrefixes: addressPrefixes
 }
-param serviceEndpoints array = [
- {
-  service:'Microsoft.storage'
- }
- {
-  service:'Microsoft.Keyvault'
- }
- {
-  service:'Microsoft.AzureActiveDirectory'
- }
-]
 resource nsg 'Microsoft.Network/networkSecurityGroups@2022-01-01' existing ={
   name: nsgname
 }
@@ -60,7 +89,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2022-01-01' =if(vnetNewOrExisti
       name:subnet.name
       properties:{
         addressPrefix:subnet.addressPrefix
-        serviceEndpoints:serviceEndpoints
+        serviceEndpoints:subnet.serviceEndpoints
         privateEndpointNetworkPolicies:'Enabled'
         privateLinkServiceNetworkPolicies:'Enabled'
       }
@@ -76,9 +105,28 @@ resource subnet 'Microsoft.Network/virtualNetworks/subnets@2022-01-01'= {
   parent:vnet
   properties:{
     addressPrefix:'172.16.2.0/24'
+    serviceEndpoints:[
+      {
+      service:'Microsoft.KeyVault'
+      }
+      {
+      service:'Microsoft.Storage'
+      }
+      {
+      service:'Microsoft.AzureActiveDirectory'
+      }
+      {
+      service:'Microsoft.sql'
+      }
+      {
+      service:'Microsoft.web'
+      }
+      {
+      service:'Microsoft.ContainerRegistry'
+      }
+    ]
     networkSecurityGroup:{
       id:nsgId
     }
   }
 }
-
