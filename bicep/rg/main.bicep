@@ -3,7 +3,7 @@ param location string = deployment().location
 module rg 'rg.bicep'= {
   name: 'deployResourceGroup'
   params: {
-    name: 'azengnruksouthrg'
+    name: ''//enter resource group name
     location: location
   }
 }
