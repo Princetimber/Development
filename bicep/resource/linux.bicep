@@ -63,7 +63,6 @@ var certificateUri = '${vaultUri}secrets/365cloudCert/'//enter correct key versi
 resource vnet 'Microsoft.Network/virtualNetworks@2022-01-01' existing= {
   name: virtualNetworkName
 }
-var vnetId = vnet.id
 resource stg 'Microsoft.Storage/storageAccounts@2022-05-01' existing = {
   name: storageAccountName
 }
@@ -91,7 +90,7 @@ resource networkInterface 'Microsoft.Network/networkInterfaces@2022-01-01' = [fo
         properties:{
           primary:true
           subnet:{
-            id:resourceId('${vnetId}/subnets/','subnet0')
+            id:'${vnet.id}/subnets/subnet0'
           }
           privateIPAddressVersion:'IPv4'
           privateIPAllocationMethod:'Static'
