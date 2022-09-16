@@ -7,7 +7,22 @@ var name = '${vnetName}-${suffix}'
 resource vnet 'Microsoft.Network/virtualNetworks@2022-01-01' existing = {
   name: vnetName
 }
-var vnetId = vnet.id
+param BastionSubnetObject object = {
+  name:'azureBastionSubnet'
+  subnet:[
+    {
+      name:'azureBastionSubnet'
+      addressPrefix:'172.16.2.0/24'
+    }
+  ]
+}
+resource subnet 'Microsoft.Network/virtualNetworks/subnets@2022-01-01' = {
+  name: BastionSubnetObject.name
+  properties:{
+    addressPrefix:BastionSubnetObject.addressPrefix
+  }
+  parent:vnet
+}
 resource pubIp 'Microsoft.Network/publicIPAddresses@2022-01-01' = {
   name: pubIpName
   location:location
@@ -42,7 +57,7 @@ resource bastion 'Microsoft.Network/bastionHosts@2022-01-01' = {
     id:pubIp.id
   }
   subnet:{
-  id:resourceId('${vnetId}/subnets/','azureBastionSubnet')
+  id:subnet.id
   }
   privateIPAllocationMethod:'Dynamic'
   }
