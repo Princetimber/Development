@@ -50,3 +50,12 @@ module keyvault 'keyvaults.bicep'= {
     vnet
   ]
 }
+module bastion 'bastion.bicep'={
+  name: 'bastionDeployment'
+  dependsOn:[
+  vnet  
+  ]
+  params:{
+  location:location  
+  }
+}
