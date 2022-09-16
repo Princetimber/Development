@@ -65,4 +65,8 @@ resource keyvaults 'Microsoft.KeyVault/vaults@2022-07-01' = {
     }
     provisioningState:'Succeeded'
   }
+  tags:{
+    DisplayName:'KeyVault'
+    CostCenter:'Engineering'
+  }
 }
