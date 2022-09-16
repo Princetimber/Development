@@ -13,12 +13,8 @@ param subnets array= [
     addressPrefix:'172.16.0.0/27'
   }
   {
-    name:'azureBastionSubnet'
-    addressPrefix:'172.16.1.0/26'
-  }
-  {
   name:'subnet0'
-  addressPrefix: '172.16.2.0/24'
+  addressPrefix: '172.16.1.0/24'
   }
 ]
 param subnetname string = 'subnet0'
@@ -85,3 +81,4 @@ resource subnet 'Microsoft.Network/virtualNetworks/subnets@2022-01-01'= {
     }
   }
 }
+
