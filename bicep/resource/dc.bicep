@@ -66,7 +66,6 @@ var certificateUri = '${vaultUri}secrets/365cloudCert/'//enter correct key versi
 resource vnet 'Microsoft.Network/virtualNetworks@2022-01-01' existing= {
   name: virtualNetworkName
 }
-var vnetId = vnet.id
 resource stg 'Microsoft.Storage/storageAccounts@2022-05-01' existing = {
   name: storageAccountName
 }
@@ -114,7 +113,7 @@ resource nic 'Microsoft.Network/networkInterfaces@2022-01-01' = [for i in Virtua
         properties:{
           primary:true
           subnet:{
-            id:resourceId('${vnetId}/Subnets/','subnet0')
+            id:'${vnet.id}/Subnets/subnet0'
           }
           privateIPAddressVersion:'IPv4'
           privateIPAllocationMethod:'Static'
