@@ -39,20 +39,14 @@ module ng 'natgw.bicep'= {
     suffix:'ng'
   }
 }
-module bastion 'bastion.bicep'= {
-  name: 'deployBastion'
-  dependsOn:[
-    vnet
-  ]
-  params:{
-    location:location
-  }
-}
-module keyvaults 'keyvaults.bicep'={
-  name: 'deployKeyVaults'
+module keyvault 'keyvaults.bicep'= {
+  name: 'deployKeyvault'
   params: {
     location:location
-    objectId: ''//add AAD user objectId
-    publicIpAddress:''//add your public IpAddress allowed to access resource
+    objectId:''
+    publicIpAddress:''
   }
+  dependsOn: [
+    vnet
+  ]
 }
