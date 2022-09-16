@@ -9,7 +9,6 @@ var vnetName = '${toLower(resourceGroup().name)}${vnetsuffix}'
 resource vnet 'Microsoft.Network/virtualNetworks@2022-01-01' existing = {
   name: vnetName
 }
-var vnetId = vnet.id
 resource keyvaults 'Microsoft.KeyVault/vaults@2022-07-01' = {
   name: name
   location:location
@@ -57,13 +56,10 @@ resource keyvaults 'Microsoft.KeyVault/vaults@2022-07-01' = {
       ]
       virtualNetworkRules:[
       {
-        id: resourceId('${vnetId}/subnets/','gatewaySubnet')
+        id:'${vnet.id}/subnets/gatewaySubnet'
       }
       {
-        id: resourceId('${vnetId}/subnets/','azureBastionSubnet')
-      }
-      {
-        id: resourceId('${vnetId}/subnets/','Subnet0')
+        id:'${vnet.id}/subnets/Subnet0'
       }
       ]
     }
