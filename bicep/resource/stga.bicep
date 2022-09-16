@@ -38,7 +38,6 @@ var vnetName = '${toLower(resourceGroup().name)}${vnetsuffix}'
 resource vnet 'Microsoft.Network/virtualNetworks@2022-01-01' existing = {
   name: vnetName
 }
-var vnetId = vnet.id
 var name = '${uniqueString(resourceGroup().id)}${suffix}'
 resource stga 'Microsoft.Storage/storageAccounts@2021-09-01' = if (stgNewOrExisting == 'new') {
   name: name
@@ -74,12 +73,12 @@ resource stga 'Microsoft.Storage/storageAccounts@2021-09-01' = if (stgNewOrExist
       bypass:'AzureServices'
       virtualNetworkRules:[
        {
-        id: resourceId('${vnetId}/subnets/','gatewaySubnet')
+        id: '${vnet.id}/subnets/gatewaySubnet'
         action:'Allow'
         state:'Succeeded'
        }
        {
-        id: resourceId('${vnetId}/subnets/','subnet0')
+        id:'${vnet.id}/subnets/subnet0'
         action:'Allow'
         state:'Succeeded'
        }
