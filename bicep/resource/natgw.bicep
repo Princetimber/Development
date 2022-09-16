@@ -52,6 +52,26 @@ resource subnet 'Microsoft.Network/virtualNetworks/subnets@2022-01-01' = {
   parent:vnet
   properties:{
     addressPrefix:'172.16.2.0/24'
+    serviceEndpoints:[
+      {
+      service:'Microsoft.KeyVault'
+      }
+      {
+      service:'Microsoft.Storage'
+      }
+      {
+      service:'Microsoft.AzureActiveDirectory'
+      }
+      {
+      service:'Microsoft.sql'
+      }
+      {
+      service:'Microsoft.web'
+      }
+      {
+      service:'Microsoft.ContainerRegistry'
+      }
+    ]
     natGateway:{
       id:ngw.id
     }
