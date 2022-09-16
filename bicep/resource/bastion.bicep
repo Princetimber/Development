@@ -7,19 +7,12 @@ var name = '${vnetName}-${suffix}'
 resource vnet 'Microsoft.Network/virtualNetworks@2022-01-01' existing = {
   name: vnetName
 }
-param BastionSubnetObject object = {
-  name:'azureBastionSubnet'
-  subnet:[
-    {
-      name:'azureBastionSubnet'
-      addressPrefix:'172.16.1.0/24'
-    }
-  ]
-}
+param bastionSubnetName string = 'azureBastionSubnet'
+param addressPrefix string = '172.16.1.0/24'
 resource subnet 'Microsoft.Network/virtualNetworks/subnets@2022-01-01' = {
-  name: BastionSubnetObject.name
+  name: bastionSubnetName
   properties:{
-    addressPrefix:BastionSubnetObject.addressPrefix
+    addressPrefix:addressPrefix
   }
   parent:vnet
 }
@@ -63,6 +56,9 @@ resource bastion 'Microsoft.Network/bastionHosts@2022-01-01' = {
   }
    }
   ]
+  }
+  sku:{
+    name:'Standard'
   }
 }
 output name string = bastion.name
