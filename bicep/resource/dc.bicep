@@ -47,10 +47,26 @@ param location string = resourceGroup().location
 param privateIpAddress string
 param dnsServers array = [
   '172.16.2.4'
-  '172.16.2.5'
   '1.1.1.1'
   '8.8.8.8'
 ]
+@description('specify autoshutdown status. acceptable values enable or disable')
+@allowed([
+  'enabled'
+  'disabled'
+])
+param autoShutdownStatus string = 'enabled'
+param autoShutdownTime string = '18:00'
+param autoShutdownTimezone string = 'GMT Standard Time'
+@description('enable or disable notification to adminuser before machine is autoshutdown')
+@allowed([
+  'enabled'
+  'disabled'
+])
+param autoShutdownNotificationStatus string ='enabled'
+param autoShutdownNotificationLocale string = 'en'
+param autoShutdownNotificationEmail string = 'shutdown@fountview.co.uk'
+param autoShutdownNotificationTimeInMinutes int = 30
 var VirtualMachineCountRange = range(0,virtualMachineCount)
 var availabilitySetName = '${toLower(resourceGroup().name)}${availabilitySetSuffix}'
 var proximityPlacementGroupName ='${toLower(resourceGroup().name)}${proximityPlacementGroupSuffix}'
@@ -155,6 +171,10 @@ resource virtualMachine 'Microsoft.Compute/virtualMachines@2022-03-01' = [for i 
       networkInterfaces:[
         {
           id:resourceId('Microsoft.network/NetworkInterfaces','${name}${i+1}${networkInterfaceSuffix}')
+          properties:{
+            deleteOption:'Delete'
+             primary:true
+          }
         }
       ]
     }
@@ -227,10 +247,20 @@ resource virtualMachine 'Microsoft.Compute/virtualMachines@2022-03-01' = [for i 
         notBeforeTimeout:'PT5M'
       }
     }
+    securityProfile:{
+      securityType:'TrustedLaunch'
+      uefiSettings:{
+        secureBootEnabled:true
+        vTpmEnabled:true
+      }
+    }
   }
   identity:{
     type:'SystemAssigned'
   }
+  zones:[
+    '2'
+  ]
 }]
 resource extensions 'Microsoft.Compute/virtualMachines/extensions@2022-03-01' = [for i in VirtualMachineCountRange: {
   name: '${name}${i+1}/config-app'
@@ -250,4 +280,31 @@ resource extensions 'Microsoft.Compute/virtualMachines/extensions@2022-03-01' = 
   dependsOn:[
     virtualMachine
   ]
+}]
+resource shutwon_ComputeVM 'Microsoft.DevTestLab/schedules@2018-09-15' = [for i in VirtualMachineCountRange: {
+  name:'shutdown-computevm-${name}${i+1}'
+  location:location
+  tags:{
+    DisplayName:'Shutdown-ComputeVM'
+    CostCenter:'Engineering'
+  }
+  properties:{
+    status:autoShutdownStatus
+    taskType:'ComputeVmShutdownTask'
+    dailyRecurrence:{
+      time:autoShutdownTime
+    }
+    timeZoneId:autoShutdownTimezone
+    targetResourceId:resourceId('Microsoft.Compute/VirtualMachines','${name}${i+1}')
+    notificationSettings:{
+      status:autoShutdownNotificationStatus
+      notificationLocale: autoShutdownNotificationLocale
+      timeInMinutes:autoShutdownNotificationTimeInMinutes
+      emailRecipient:autoShutdownNotificationEmail
+    }
+  }
+  dependsOn:[
+    virtualMachine
+  ]
+
 }]
