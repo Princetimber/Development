@@ -281,7 +281,7 @@ resource extensions 'Microsoft.Compute/virtualMachines/extensions@2022-03-01' = 
     virtualMachine
   ]
 }]
-resource shutwon_ComputeVM 'Microsoft.DevTestLab/schedules@2018-09-15' = [for i in VirtualMachineCountRange: {
+resource shutdown_ComputeVM 'Microsoft.DevTestLab/schedules@2018-09-15' = [for i in VirtualMachineCountRange: {
   name:'shutdown-computevm-${name}${i+1}'
   location:location
   tags:{
