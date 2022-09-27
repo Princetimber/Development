@@ -26,20 +26,8 @@ module vnet 'vnet.bicep'={
   }
 }
 output vnetName string = vnet.outputs.name
-output ventId string = vnet.outputs.Id
-
-module ng 'natgw.bicep'= {
-  name: 'deplyNatGateway'
-  dependsOn:[
-    vnet
-  ]
-  params: {
-    location:location
-    pubIpSuffix: 'pubIp'
-    suffix:'ng'
-  }
-}
-module keyvault 'keyvaults.bicep'= {
+output vnetId string = vnet.outputs.Id
+module vault 'keyvaults.bicep'= {
   name: 'deployKeyvault'
   params: {
     location:location
@@ -50,12 +38,27 @@ module keyvault 'keyvaults.bicep'= {
     vnet
   ]
 }
-module bastion 'bastion.bicep'={
-  name: 'bastionDeployment'
-  dependsOn:[
-  vnet  
-  ]
-  params:{
-  location:location  
+output vaultName string = vault.outputs.name
+module secrets 'secrets.bicep'={
+  name: 'deploySecrets'
+  params: {
+    name:''
+    value:''
+    exp:01
+    nbf:01
   }
+  dependsOn:[
+    vault
+  ]
 }
+output secretName string = secrets.name
+module bastion 'bastion.bicep' = {
+  name: 'deployBastionInfrastructure'
+  params:{
+    location:location
+  }
+  dependsOn:[
+    vnet
+  ]
+}
+output bastionName string = bastion.name
