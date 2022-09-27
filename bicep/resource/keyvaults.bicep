@@ -70,3 +70,4 @@ resource keyvaults 'Microsoft.KeyVault/vaults@2022-07-01' = {
     CostCenter:'Engineering'
   }
 }
+output name string = keyvaults.name
