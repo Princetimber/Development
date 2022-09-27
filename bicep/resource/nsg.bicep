@@ -4,7 +4,7 @@ param sourceAddressPrefixes array
 param destinationAddressPrefix string
 param location string = resourceGroup().location
 
-var name = '${toLower(resourceGroup().name)}${suffix}'
+var name = '${toLower(replace(resourceGroup().name,'rg',''))}${suffix}'
 var allowhttpsInboundTraffic = '${name}/Allow_https_Inbound_Traffic'
 var allowhttpInboundTraffic = '${name}/Allow_http_inbound_Traffic'
 var allowRdpInboundTraffic = '${name}/Allow_Rdp_Inbound_Traffic'
@@ -76,7 +76,7 @@ resource nsg 'Microsoft.Network/networkSecurityGroups@2022-01-01'= {
         sourceAddressPrefixes:sourceAddressPrefixes
         sourcePortRange:'*'
         destinationAddressPrefix:destinationAddressPrefix
-        destinationPortRange:'20-25'
+        destinationPortRange:'22'
       }
     }
     {
@@ -176,7 +176,7 @@ resource allowSSHInboundTrafficRule 'Microsoft.Network/networkSecurityGroups/sec
     sourceAddressPrefixes:sourceAddressPrefixes
     sourcePortRange:'*'
     destinationAddressPrefix:destinationAddressPrefix
-    destinationPortRange:'20-25'
+    destinationPortRange:'22'
   }
 }
 resource allowWinRMInboundTrafficRule 'Microsoft.Network/networkSecurityGroups/securityRules@2022-01-01'={
