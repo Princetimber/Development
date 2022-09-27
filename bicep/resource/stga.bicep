@@ -34,7 +34,19 @@ param vnetsuffix string ='vnet'
   'existing'
 ])
 param stgNewOrExisting string
-var vnetName = '${toLower(resourceGroup().name)}${vnetsuffix}'
+//param vaultsuffix string ='kv'
+//var vaultName = '${toLower(resourceGroup().name)}${vaultsuffix}'
+//resource vault 'Microsoft.KeyVault/vaults@2022-07-01' existing = {
+//name: vaultName
+//}
+//var vaultUri = vault.properties.vaultUri
+//param keyName string = '365CloudCertificateKey'
+//resource keys 'Microsoft.KeyVault/vaults/keys@2022-07-01'existing = {
+  //name:keyName
+//}
+//var KeysName = keys.name
+//var keyVersion = keys.properties.keyUriWithVersion
+var vnetName = '${toLower(replace(resourceGroup().name,'rg',''))}${vnetsuffix}'
 resource vnet 'Microsoft.Network/virtualNetworks@2022-01-01' existing = {
   name: vnetName
 }
@@ -56,9 +68,6 @@ resource stga 'Microsoft.Storage/storageAccounts@2021-09-01' = if (stgNewOrExist
     allowCrossTenantReplication:true
     allowedCopyScope:'AAD'
     allowSharedKeyAccess:true
-    azureFilesIdentityBasedAuthentication:{
-      directoryServiceOptions: 'AD'
-    }
     minimumTlsVersion:'TLS1_2'
     supportsHttpsTrafficOnly:true
     isNfsV3Enabled:true
@@ -67,7 +76,7 @@ resource stga 'Microsoft.Storage/storageAccounts@2021-09-01' = if (stgNewOrExist
     isLocalUserEnabled:true
     isSftpEnabled:true
     defaultToOAuthAuthentication:true
-    dnsEndpointType:'AzureDnsZone'
+    dnsEndpointType:'Standard'
     networkAcls:{
       defaultAction: 'Deny'
       bypass:'AzureServices'
@@ -90,9 +99,42 @@ resource stga 'Microsoft.Storage/storageAccounts@2021-09-01' = if (stgNewOrExist
         }
       ]
     }
-    encryption:{
-      keySource: 'Microsoft.Keyvault'
+    immutableStorageWithVersioning:{
+      enabled:true
+      immutabilityPolicy:{
+        allowProtectedAppendWrites:true
+        immutabilityPeriodSinceCreationInDays:30
+        state:'Unlocked'
+      }
     }
+    keyPolicy:{
+      keyExpirationPeriodInDays: 90
+    }
+    sasPolicy:{
+      expirationAction: 'Log'
+      sasExpirationPeriod: '30:00:00:00'
+    }
+encryption:{
+  keySource: 'Microsoft.Keyvault'
+  services:{
+blob:{
+  enabled:true
+  keyType:'Service'
+}
+file:{
+  enabled:true
+  keyType:'Service'
+}
+queue:{
+  enabled:true
+  keyType:'Service'
+}
+table:{
+  enabled:true
+  keyType:'Service'
+}
+  }
+}
   }
   identity:{
     type: 'SystemAssigned'
