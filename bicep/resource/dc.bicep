@@ -68,17 +68,17 @@ param autoShutdownNotificationLocale string = 'en'
 param autoShutdownNotificationEmail string = 'shutdown@fountview.co.uk'
 param autoShutdownNotificationTimeInMinutes int = 30
 var VirtualMachineCountRange = range(0,virtualMachineCount)
-var availabilitySetName = '${toLower(resourceGroup().name)}${availabilitySetSuffix}'
-var proximityPlacementGroupName ='${toLower(resourceGroup().name)}${proximityPlacementGroupSuffix}'
-var virtualNetworkName = '${toLower(resourceGroup().name)}${vnetsuffix}'
+var availabilitySetName = '${toLower(replace(resourceGroup().name,'rg',''))}${availabilitySetSuffix}'
+var proximityPlacementGroupName ='${toLower(replace(resourceGroup().name,'rg',''))}${proximityPlacementGroupSuffix}'
+var virtualNetworkName = '${toLower(replace(resourceGroup().name,'rg',''))}${vnetsuffix}'
 var storageAccountName = '${uniqueString(resourceGroup().id)}${stgaSuffix}'
-var KeyVaultName = '${toLower(resourceGroup().name)}${keyvaultSuffix}'
+var KeyVaultName = '${toLower(replace(resourceGroup().name,'rg',''))}${keyvaultSuffix}'
 resource vault 'Microsoft.KeyVault/vaults@2022-07-01' existing = {
   name: KeyVaultName
 }
 var vaultId = vault.id
 var vaultUri = vault.properties.vaultUri
-var certificateUri = '${vaultUri}secrets/365cloudCert/'//enter correct key version
+var certificateUri = '${vaultUri}secrets/365cloudcertificate/7022e6fe08d24925a46182b00fc7d403'//enter correct key version
 resource vnet 'Microsoft.Network/virtualNetworks@2022-01-01' existing= {
   name: virtualNetworkName
 }
@@ -258,9 +258,6 @@ resource virtualMachine 'Microsoft.Compute/virtualMachines@2022-03-01' = [for i 
   identity:{
     type:'SystemAssigned'
   }
-  zones:[
-    '2'
-  ]
 }]
 resource extensions 'Microsoft.Compute/virtualMachines/extensions@2022-03-01' = [for i in VirtualMachineCountRange: {
   name: '${name}${i+1}/config-app'
