@@ -4,8 +4,8 @@ param objectId string //AAD User ObjectId
 param suffix string = 'kv'
 param vnetsuffix string = 'vnet'
 param publicIpAddress string //Enter public IPAddress
-var name = '${toLower(resourceGroup().name)}${suffix}'
-var vnetName = '${toLower(resourceGroup().name)}${vnetsuffix}'
+var name = '${toLower(replace(resourceGroup().name,'rg',''))}${suffix}'
+var vnetName = '${toLower(replace(resourceGroup().name,'rg',''))}${vnetsuffix}'
 resource vnet 'Microsoft.Network/virtualNetworks@2022-01-01' existing = {
   name: vnetName
 }
