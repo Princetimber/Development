@@ -4,8 +4,8 @@ param pubIpSuffix string
 param subnetName string = 'subnet0'
 param vnetnamesuffix string = 'vnet'
 param nsgsuffix string = 'nsg'
-var nsgName = '${toLower(resourceGroup().name)}${nsgsuffix}'
-var vnetname = '${toLower(resourceGroup().name)}${vnetnamesuffix}'
+var nsgName = '${toLower(replace(resourceGroup().name,'rg',''))}${nsgsuffix}'
+var vnetname = '${toLower(replace(resourceGroup().name,'rg',''))}${vnetnamesuffix}'
 resource vnet 'Microsoft.Network/virtualNetworks@2022-01-01' existing = {
   name: vnetname
 }
@@ -13,7 +13,7 @@ resource nsg 'Microsoft.Network/networkSecurityGroups@2022-01-01' existing = {
   name: nsgName
 }
 var nsgId = nsg.id
-var name = '${toLower(resourceGroup().name)}${suffix}'
+var name = '${toLower(replace(resourceGroup().name,'rg',''))}${suffix}'
 var pubIpName = '${name}${pubIpSuffix}'
 resource pubIp 'Microsoft.Network/publicIPAddresses@2022-01-01'={
   name:pubIpName
