@@ -2,7 +2,7 @@ param location string = resourceGroup().location
 param suffix string = 'bastion'
 param vnetSuffix string = 'vnet'
 param pubIpName string = 'pubIp'
-var vnetName = '${toLower(resourceGroup().name)}${vnetSuffix}'
+var vnetName = '${toLower(replace(resourceGroup().name,'rg',''))}${vnetSuffix}'
 var name = '${vnetName}-${suffix}'
 resource vnet 'Microsoft.Network/virtualNetworks@2022-01-01' existing = {
   name: vnetName
