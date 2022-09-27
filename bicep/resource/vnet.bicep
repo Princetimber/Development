@@ -64,8 +64,8 @@ param subnetname string = 'subnet0'
   'existing'
 ])
 param vnetNewOrExisting string
-var name = '${toLower(resourceGroup().name)}${suffix}'
-var nsgname = '${toLower(resourceGroup().name)}${nsgsuffix}'
+var name = '${toLower(replace(resourceGroup().name,'rg',''))}${suffix}'
+var nsgname = '${toLower(replace(resourceGroup().name,'rg',''))}${nsgsuffix}'
 param settings object = {
   location:location
   addressPrefixes: addressPrefixes
