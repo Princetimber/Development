@@ -34,18 +34,6 @@ param vnetsuffix string ='vnet'
   'existing'
 ])
 param stgNewOrExisting string
-//param vaultsuffix string ='kv'
-//var vaultName = '${toLower(resourceGroup().name)}${vaultsuffix}'
-//resource vault 'Microsoft.KeyVault/vaults@2022-07-01' existing = {
-//name: vaultName
-//}
-//var vaultUri = vault.properties.vaultUri
-//param keyName string = '365CloudCertificateKey'
-//resource keys 'Microsoft.KeyVault/vaults/keys@2022-07-01'existing = {
-  //name:keyName
-//}
-//var KeysName = keys.name
-//var keyVersion = keys.properties.keyUriWithVersion
 var vnetName = '${toLower(replace(resourceGroup().name,'rg',''))}${vnetsuffix}'
 resource vnet 'Microsoft.Network/virtualNetworks@2022-01-01' existing = {
   name: vnetName
