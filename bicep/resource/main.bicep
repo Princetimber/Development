@@ -31,8 +31,8 @@ module vault 'keyvaults.bicep'= {
   name: 'deployKeyvault'
   params: {
     location:location
-    objectId:''
-    publicIpAddress:''
+    objectId:''//ToDO add AzureAD user objectId
+    publicIpAddress:''//ToDo add publicIp Address that can access vault
   }
   dependsOn: [
     vnet
@@ -42,10 +42,10 @@ output vaultName string = vault.outputs.name
 module secrets 'secrets.bicep'={
   name: 'deploySecrets'
   params: {
-    name:''
-    value:''
-    exp:01
-    nbf:01
+    name:'' //ToDo add secrets Name
+    value:''//ToDO add the value of your secret
+    exp:10 // TODO add the UNIX time in secs for the secret to expire
+    nbf:12 // TODO add the UNIX time in secs before the secret becomes active
   }
   dependsOn:[
     vault
