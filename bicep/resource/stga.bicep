@@ -11,7 +11,7 @@ param suffix string = 'stga'
   'Premium_LRS'
   'Premium_ZRS'
 ])
-param sku string = 'Standard_LRS'
+param sku string
 @allowed([
   'StorageV2'
   'BlobStorage'
@@ -39,16 +39,16 @@ resource vnet 'Microsoft.Network/virtualNetworks@2022-01-01' existing = {
   name: vnetName
 }
 var name = '${uniqueString(resourceGroup().id)}${suffix}'
-resource stga 'Microsoft.Storage/storageAccounts@2021-09-01' = if (stgNewOrExisting == 'new') {
-  name: name
+resource stga 'Microsoft.Storage/storageAccounts@2022-05-01' = if (stgNewOrExisting == 'new') {
+  name:name
   location:location
-  tags:{
-    displayName:'storageAccounts'
-    CostCenter:'Engineering'
-  }
-  kind:kind
   sku:{
     name: sku
+  }
+  kind:kind
+  tags:{
+    DisplayName:'Storage Account'
+    CostCenter:'Engineering'
   }
   properties:{
     accessTier:accessTier
@@ -58,27 +58,28 @@ resource stga 'Microsoft.Storage/storageAccounts@2021-09-01' = if (stgNewOrExist
     allowSharedKeyAccess:true
     minimumTlsVersion:'TLS1_2'
     supportsHttpsTrafficOnly:true
-    isNfsV3Enabled:true
     isHnsEnabled:true
-    largeFileSharesState:'Enabled'
     isLocalUserEnabled:true
-    isSftpEnabled:true
+    isNfsV3Enabled:true
+    isSftpEnabled: true
+    largeFileSharesState:'Enabled'
     defaultToOAuthAuthentication:true
     dnsEndpointType:'Standard'
     networkAcls:{
       defaultAction: 'Deny'
       bypass:'AzureServices'
       virtualNetworkRules:[
-       {
-        id: '${vnet.id}/subnets/gatewaySubnet'
-        action:'Allow'
-        state:'Succeeded'
-       }
-       {
-        id:'${vnet.id}/subnets/subnet0'
-        action:'Allow'
-        state:'Succeeded'
-       }
+        {
+          id:'${vnet.id}/subnets/gatewaySubnet'
+          action:'Allow'
+          state:'Succeeded'
+        }
+        {
+          id:'${vnet.id}/subnets/subnet0'
+          action:'Allow'
+          state:'Succeeded'
+        }
+
       ]
       ipRules:[
         {
@@ -87,45 +88,13 @@ resource stga 'Microsoft.Storage/storageAccounts@2021-09-01' = if (stgNewOrExist
         }
       ]
     }
-    immutableStorageWithVersioning:{
-      enabled:true
-      immutabilityPolicy:{
-        allowProtectedAppendWrites:true
-        immutabilityPeriodSinceCreationInDays:30
-        state:'Unlocked'
-      }
-    }
     keyPolicy:{
       keyExpirationPeriodInDays: 90
     }
     sasPolicy:{
       expirationAction: 'Log'
-      sasExpirationPeriod: '30:00:00:00'
+      sasExpirationPeriod:'30:00:00:00'
     }
-encryption:{
-  keySource: 'Microsoft.Keyvault'
-  services:{
-blob:{
-  enabled:true
-  keyType:'Service'
-}
-file:{
-  enabled:true
-  keyType:'Service'
-}
-queue:{
-  enabled:true
-  keyType:'Service'
-}
-table:{
-  enabled:true
-  keyType:'Service'
-}
-  }
-}
-  }
-  identity:{
-    type: 'SystemAssigned'
   }
 }
 output name string = stga.name
