@@ -18,8 +18,9 @@ param storageAccountType string = 'standard_LRS'
 @allowed([
   'standard_DS1_v2'
   'standard_DS2_v2'
+  'standard_D2s_v3'
 ])
-param VmSize string = 'standard_DS1_v2'
+param VmSize string 
 @description('specify user Account Name')
 param adminUsername string
 @description('specify secure machine Password')
@@ -43,7 +44,11 @@ param dnsServers array = [
   '8.8.8.8'
 ]
 param publisher string = 'Canonical'
-param Offer string = 'UbuntuServer'
+@allowed([
+  'UbuntuServer'
+  '0001-com-ubuntu-server-jammy'
+])
+param Offer string
 param location string = resourceGroup().location
 @allowed([
   'enabled'
