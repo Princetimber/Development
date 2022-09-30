@@ -65,7 +65,7 @@ param autoShutdownTimezone string = 'GMT Standard Time'
 ])
 param autoShutdownNotificationStatus string ='enabled'
 param autoShutdownNotificationLocale string = 'en'
-param autoShutdownNotificationEmail string = 'shutdown@fountview.co.uk'
+param autoShutdownNotificationEmail string = 'autoshutdown@fountview.co.uk'
 param autoShutdownNotificationTimeInMinutes int = 30
 var VirtualMachineCountRange = range(0,virtualMachineCount)
 var availabilitySetName = '${toLower(replace(resourceGroup().name,'rg',''))}${availabilitySetSuffix}'
@@ -78,7 +78,7 @@ resource vault 'Microsoft.KeyVault/vaults@2022-07-01' existing = {
 }
 var vaultId = vault.id
 var vaultUri = vault.properties.vaultUri
-var certificateUri = '${vaultUri}secrets/365cloudcertificate/7022e6fe08d24925a46182b00fc7d403'//enter correct key version
+var certificateUri = '${vaultUri}secrets/365cloudcertificate/db36892b41f949dcbb19ed55039cfbc9'//TODO enter correct key version
 resource vnet 'Microsoft.Network/virtualNetworks@2022-01-01' existing= {
   name: virtualNetworkName
 }
