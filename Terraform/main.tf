@@ -30,3 +30,24 @@ resource "azurerm_resource_group" "rg" {
     "CostCenter"  = "Engineering"
   }
 }
+resource "azurerm_storage_account" "stg" {
+  account_replication_type        = "LRS"
+  account_tier                    = "Standard"
+  location                        = "uksouth"
+  name                            = var.storage_account_name
+  resource_group_name             = var.resource_group_name
+  account_kind                    = "StorageV2"
+  enable_https_traffic_only       = true
+  access_tier                     = "Hot"
+  allow_nested_items_to_be_public = true
+  blob_properties {
+    change_feed_enabled           = true
+    change_feed_retention_in_days = 30
+    container_delete_retention_policy {
+      days = 90
+    }
+    default_service_version  = "2020-06-12"
+    versioning_enabled       = true
+    last_access_time_enabled = true
+  }
+}
