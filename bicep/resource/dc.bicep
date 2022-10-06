@@ -63,23 +63,23 @@ param autoShutdownTimezone string = 'GMT Standard Time'
   'enabled'
   'disabled'
 ])
-param autoShutdownNotificationStatus string ='enabled'
+param autoShutdownNotificationStatus string = 'enabled'
 param autoShutdownNotificationLocale string = 'en'
 param autoShutdownNotificationEmail string = 'autoshutdown@fountview.co.uk'
 param autoShutdownNotificationTimeInMinutes int = 30
-var VirtualMachineCountRange = range(0,virtualMachineCount)
-var availabilitySetName = '${toLower(replace(resourceGroup().name,'rg',''))}${availabilitySetSuffix}'
-var proximityPlacementGroupName ='${toLower(replace(resourceGroup().name,'rg',''))}${proximityPlacementGroupSuffix}'
-var virtualNetworkName = '${toLower(replace(resourceGroup().name,'rg',''))}${vnetsuffix}'
+var VirtualMachineCountRange = range(0, virtualMachineCount)
+var availabilitySetName = '${toLower(replace(resourceGroup().name, 'rg', ''))}${availabilitySetSuffix}'
+var proximityPlacementGroupName = '${toLower(replace(resourceGroup().name, 'rg', ''))}${proximityPlacementGroupSuffix}'
+var virtualNetworkName = '${toLower(replace(resourceGroup().name, 'rg', ''))}${vnetsuffix}'
 var storageAccountName = '${uniqueString(resourceGroup().id)}${stgaSuffix}'
-var KeyVaultName = '${toLower(replace(resourceGroup().name,'rg',''))}${keyvaultSuffix}'
+var KeyVaultName = '${toLower(replace(resourceGroup().name, 'rg', ''))}${keyvaultSuffix}'
 resource vault 'Microsoft.KeyVault/vaults@2022-07-01' existing = {
   name: KeyVaultName
 }
 var vaultId = vault.id
 var vaultUri = vault.properties.vaultUri
-var certificateUri = '${vaultUri}secrets/365cloudcertificate/db36892b41f949dcbb19ed55039cfbc9'//TODO enter correct key version
-resource vnet 'Microsoft.Network/virtualNetworks@2022-01-01' existing= {
+var certificateUri = '${vaultUri}secrets/365cloudcertificate/db36892b41f949dcbb19ed55039cfbc9' //TODO enter correct key version
+resource vnet 'Microsoft.Network/virtualNetworks@2022-01-01' existing = {
   name: virtualNetworkName
 }
 resource stg 'Microsoft.Storage/storageAccounts@2022-05-01' existing = {
@@ -87,220 +87,220 @@ resource stg 'Microsoft.Storage/storageAccounts@2022-05-01' existing = {
 }
 var stgaUri = stg.properties.primaryEndpoints.blob
 resource ppgrp 'Microsoft.Compute/proximityPlacementGroups@2022-03-01' = {
-  name:proximityPlacementGroupName
-  location:location
-  tags:{
-    DisplayName:'ProximityPlacementGroup'
-    CostCenter:'Engineering'
+  name: proximityPlacementGroupName
+  location: location
+  tags: {
+    DisplayName: 'ProximityPlacementGroup'
+    CostCenter: 'Engineering'
   }
-  properties:{
-    proximityPlacementGroupType:'Standard'
+  properties: {
+    proximityPlacementGroupType: 'Standard'
   }
 }
-resource availabilitySet 'Microsoft.Compute/availabilitySets@2022-03-01'={
+resource availabilitySet 'Microsoft.Compute/availabilitySets@2022-03-01' = {
   name: availabilitySetName
-  location:location
-  tags:{
-    DisplayName:'AvailabilitySet'
-    CostCenter:'Engineering'
+  location: location
+  tags: {
+    DisplayName: 'AvailabilitySet'
+    CostCenter: 'Engineering'
   }
-  properties:{
-    platformFaultDomainCount:2
-    platformUpdateDomainCount:5
-    proximityPlacementGroup:{
-      id:ppgrp.id
+  properties: {
+    platformFaultDomainCount: 2
+    platformUpdateDomainCount: 5
+    proximityPlacementGroup: {
+      id: ppgrp.id
     }
   }
-  sku:{
-    name:'Aligned'
+  sku: {
+    name: 'Aligned'
   }
 }
 resource nic 'Microsoft.Network/networkInterfaces@2022-01-01' = [for i in VirtualMachineCountRange: {
-  name:'${name}${i+1}${networkInterfaceSuffix}'
-  location:location
-  tags:{
-    DisplayName:'NetworkInterface'
-    CostCenter:'Engineering'
+  name: '${name}${i + 1}${networkInterfaceSuffix}'
+  location: location
+  tags: {
+    DisplayName: 'NetworkInterface'
+    CostCenter: 'Engineering'
   }
-  properties:{
-    ipConfigurations:[
+  properties: {
+    ipConfigurations: [
       {
-        name:'IpConfiguration'
-        properties:{
-          primary:true
-          subnet:{
-            id:'${vnet.id}/Subnets/subnet0'
+        name: 'IpConfiguration'
+        properties: {
+          primary: true
+          subnet: {
+            id: '${vnet.id}/Subnets/subnet0'
           }
-          privateIPAddressVersion:'IPv4'
-          privateIPAllocationMethod:'Static'
-          privateIPAddress:privateIpAddress
+          privateIPAddressVersion: 'IPv4'
+          privateIPAllocationMethod: 'Static'
+          privateIPAddress: privateIpAddress
         }
       }
     ]
-    dnsSettings:{
-      dnsServers:dnsServers
+    dnsSettings: {
+      dnsServers: dnsServers
     }
-    nicType:'Standard'
+    nicType: 'Standard'
   }
 }]
 resource virtualMachine 'Microsoft.Compute/virtualMachines@2022-03-01' = [for i in VirtualMachineCountRange: {
-  name:'${name}${i+1}'
-  location:location
-  tags:{
-    DisplayName:'VirtualMachine'
-    CostCenter:'Engineering'
+  name: '${name}${i + 1}'
+  location: location
+  tags: {
+    DisplayName: 'VirtualMachine'
+    CostCenter: 'Engineering'
   }
-  properties:{
-    availabilitySet:{
-      id:availabilitySet.id
+  properties: {
+    availabilitySet: {
+      id: availabilitySet.id
     }
-    proximityPlacementGroup:{
-      id:ppgrp.id
+    proximityPlacementGroup: {
+      id: ppgrp.id
     }
-    diagnosticsProfile:{
-      bootDiagnostics:{
-        enabled:true
-        storageUri:stgaUri
+    diagnosticsProfile: {
+      bootDiagnostics: {
+        enabled: true
+        storageUri: stgaUri
       }
     }
-    hardwareProfile:{
-      vmSize:size
+    hardwareProfile: {
+      vmSize: size
     }
-    licenseType:licenseType
-    networkProfile:{
-      networkInterfaces:[
+    licenseType: licenseType
+    networkProfile: {
+      networkInterfaces: [
         {
-          id:resourceId('Microsoft.network/NetworkInterfaces','${name}${i+1}${networkInterfaceSuffix}')
-          properties:{
-            deleteOption:'Delete'
-             primary:true
+          id: resourceId('Microsoft.network/NetworkInterfaces', '${name}${i + 1}${networkInterfaceSuffix}')
+          properties: {
+            deleteOption: 'Delete'
+            primary: true
           }
         }
       ]
     }
-    osProfile:{
-      adminUsername:userName
-      adminPassword:password
-      computerName:'${name}${i+1}'
-      allowExtensionOperations:true
-      windowsConfiguration:{
-        provisionVMAgent:true
-        enableAutomaticUpdates:true
-        timeZone:'GMT Standard Time'
-        winRM:{
-          listeners:[
+    osProfile: {
+      adminUsername: userName
+      adminPassword: password
+      computerName: '${name}${i + 1}'
+      allowExtensionOperations: true
+      windowsConfiguration: {
+        provisionVMAgent: true
+        enableAutomaticUpdates: true
+        timeZone: 'GMT Standard Time'
+        winRM: {
+          listeners: [
             {
-              certificateUrl:certificateUri
-              protocol:'Https'
+              certificateUrl: certificateUri
+              protocol: 'Https'
             }
           ]
         }
       }
-      secrets:[
+      secrets: [
         {
-          sourceVault:{
-            id:vaultId
+          sourceVault: {
+            id: vaultId
           }
-          vaultCertificates:[
+          vaultCertificates: [
             {
-              certificateStore:'My'
-              certificateUrl:certificateUri
+              certificateStore: 'My'
+              certificateUrl: certificateUri
             }
           ]
         }
       ]
     }
-    storageProfile:{
-      dataDisks:[
+    storageProfile: {
+      dataDisks: [
         {
           createOption: 'Empty'
-          lun:0
-          caching:'None'
-          diskSizeGB:diskSize
-          managedDisk:{
-            storageAccountType:storageAccountType
+          lun: 0
+          caching: 'None'
+          diskSizeGB: diskSize
+          managedDisk: {
+            storageAccountType: storageAccountType
           }
-          name:'${name}${i+1}_data_disk'
-          deleteOption:'Delete'
+          name: '${name}${i + 1}_data_disk'
+          deleteOption: 'Delete'
         }
       ]
-      imageReference:{
-        offer:Offer
-        publisher:publisher
-        sku:sku
-        version:'latest'
+      imageReference: {
+        offer: Offer
+        publisher: publisher
+        sku: sku
+        version: 'latest'
       }
-      osDisk:{
+      osDisk: {
         createOption: 'FromImage'
-        caching:'ReadWrite'
-        deleteOption:'Delete'
-        name:'${name}${i+1}_OSDisk'
-        managedDisk:{
-         storageAccountType:storageAccountType
+        caching: 'ReadWrite'
+        deleteOption: 'Delete'
+        name: '${name}${i + 1}_OSDisk'
+        managedDisk: {
+          storageAccountType: storageAccountType
         }
-        osType:'Windows'
+        osType: 'Windows'
       }
     }
-    scheduledEventsProfile:{
-      terminateNotificationProfile:{
-        enable:true
-        notBeforeTimeout:'PT5M'
+    scheduledEventsProfile: {
+      terminateNotificationProfile: {
+        enable: true
+        notBeforeTimeout: 'PT5M'
       }
     }
-    securityProfile:{
-      securityType:'TrustedLaunch'
-      uefiSettings:{
-        secureBootEnabled:true
-        vTpmEnabled:true
+    securityProfile: {
+      securityType: 'TrustedLaunch'
+      uefiSettings: {
+        secureBootEnabled: true
+        vTpmEnabled: true
       }
     }
   }
-  identity:{
-    type:'SystemAssigned'
+  identity: {
+    type: 'SystemAssigned'
   }
 }]
 resource extensions 'Microsoft.Compute/virtualMachines/extensions@2022-03-01' = [for i in VirtualMachineCountRange: {
-  name: '${name}${i+1}/config-app'
-  location:location
-  properties:{
-    publisher:'Microsoft.Compute'
-    type:'CustomScriptExtension'
-    typeHandlerVersion:'1.10'
-    autoUpgradeMinorVersion:true
-    settings:{
-      fileUris:[
+  name: '${name}${i + 1}/config-app'
+  location: location
+  properties: {
+    publisher: 'Microsoft.Compute'
+    type: 'CustomScriptExtension'
+    typeHandlerVersion: '1.10'
+    autoUpgradeMinorVersion: true
+    settings: {
+      fileUris: [
         virtualMachineExtensionCustomScriptUri
       ]
-      commanToExecute:'powershell.exe -ExecutionPolicy Bypass -file ./${last(split(virtualMachineExtensionCustomScriptUri,'/'))}'
+      commanToExecute: 'powershell.exe -ExecutionPolicy Bypass -file ./${last(split(virtualMachineExtensionCustomScriptUri, '/'))}'
     }
   }
-  dependsOn:[
+  dependsOn: [
     virtualMachine
   ]
 }]
 resource shutdown_ComputeVM 'Microsoft.DevTestLab/schedules@2018-09-15' = [for i in VirtualMachineCountRange: {
-  name:'shutdown-computevm-${name}${i+1}'
-  location:location
-  tags:{
-    DisplayName:'Shutdown-ComputeVM'
-    CostCenter:'Engineering'
+  name: 'shutdown-computevm-${name}${i + 1}'
+  location: location
+  tags: {
+    DisplayName: 'Shutdown-ComputeVM'
+    CostCenter: 'Engineering'
   }
-  properties:{
-    status:autoShutdownStatus
-    taskType:'ComputeVmShutdownTask'
-    dailyRecurrence:{
-      time:autoShutdownTime
+  properties: {
+    status: autoShutdownStatus
+    taskType: 'ComputeVmShutdownTask'
+    dailyRecurrence: {
+      time: autoShutdownTime
     }
-    timeZoneId:autoShutdownTimezone
-    targetResourceId:resourceId('Microsoft.Compute/VirtualMachines','${name}${i+1}')
-    notificationSettings:{
-      status:autoShutdownNotificationStatus
+    timeZoneId: autoShutdownTimezone
+    targetResourceId: resourceId('Microsoft.Compute/VirtualMachines', '${name}${i + 1}')
+    notificationSettings: {
+      status: autoShutdownNotificationStatus
       notificationLocale: autoShutdownNotificationLocale
-      timeInMinutes:autoShutdownNotificationTimeInMinutes
-      emailRecipient:autoShutdownNotificationEmail
+      timeInMinutes: autoShutdownNotificationTimeInMinutes
+      emailRecipient: autoShutdownNotificationEmail
     }
   }
-  dependsOn:[
+  dependsOn: [
     virtualMachine
   ]
 

@@ -20,7 +20,7 @@ param storageAccountType string = 'standard_LRS'
   'standard_DS2_v2'
   'standard_D2s_v3'
 ])
-param VmSize string 
+param VmSize string
 @description('specify user Account Name')
 param adminUsername string
 @description('specify secure machine Password')
@@ -61,18 +61,18 @@ param autoShutdownTimezone string = 'GMT Standard Time'
   'enabled'
   'disabled'
 ])
-param autoShutdownNotificationStatus string ='enabled'
+param autoShutdownNotificationStatus string = 'enabled'
 param autoShutdownNotificationLocale string = 'en'
 param autoShutdownNotificationEmail string = 'shutdown@fountview.co.uk'
 param autoShutdownNotificationTimeInMinutes int = 30
 @description('specify static IpAddress for virtualMachine')
 param privateIpAddress string
-var VirtualMachineCountRange = range(0,virtualMachineCount)
-var availabilitySetName = '${toLower(replace(resourceGroup().name,'rg',''))}${availabilitySetSuffix}'
-var proximityPlacementGroupName ='${toLower(replace(resourceGroup().name,'rg',''))}${proximityPlacementGroupSuffix}'
-var virtualNetworkName = '${toLower(replace(resourceGroup().name,'rg',''))}${vnetsuffix}'
+var VirtualMachineCountRange = range(0, virtualMachineCount)
+var availabilitySetName = '${toLower(replace(resourceGroup().name, 'rg', ''))}${availabilitySetSuffix}'
+var proximityPlacementGroupName = '${toLower(replace(resourceGroup().name, 'rg', ''))}${proximityPlacementGroupSuffix}'
+var virtualNetworkName = '${toLower(replace(resourceGroup().name, 'rg', ''))}${vnetsuffix}'
 var storageAccountName = '${uniqueString(resourceGroup().id)}${stgaSuffix}'
-resource vnet 'Microsoft.Network/virtualNetworks@2022-01-01' existing= {
+resource vnet 'Microsoft.Network/virtualNetworks@2022-01-01' existing = {
   name: virtualNetworkName
 }
 resource stg 'Microsoft.Storage/storageAccounts@2022-05-01' existing = {
@@ -83,155 +83,155 @@ resource ppgrp 'Microsoft.Compute/proximityPlacementGroups@2022-03-01' existing 
   name: proximityPlacementGroupName
 }
 var ppgrpId = ppgrp.id
-resource availabilityset 'Microsoft.Compute/availabilitySets@2022-03-01'existing = {
+resource availabilityset 'Microsoft.Compute/availabilitySets@2022-03-01' existing = {
   name: availabilitySetName
 }
 var availabilitySetId = availabilityset.id
 
 resource networkInterface 'Microsoft.Network/networkInterfaces@2022-01-01' = [for i in VirtualMachineCountRange: {
-  name:'${name}${i+1}${networkInterfaceSuffix}'
-  location:location
-  tags:{
-    DisplayName:'NetworkInterface'
-    CostCenter:'Engineering'
+  name: '${name}${i + 1}${networkInterfaceSuffix}'
+  location: location
+  tags: {
+    DisplayName: 'NetworkInterface'
+    CostCenter: 'Engineering'
   }
-  properties:{
-    ipConfigurations:[
+  properties: {
+    ipConfigurations: [
       {
-        name:'IpConfiguration'
-        properties:{
-          primary:true
-          subnet:{
-            id:'${vnet.id}/subnets/subnet0'
+        name: 'IpConfiguration'
+        properties: {
+          primary: true
+          subnet: {
+            id: '${vnet.id}/subnets/subnet0'
           }
-          privateIPAddressVersion:'IPv4'
-          privateIPAllocationMethod:'Static'
-          privateIPAddress:privateIpAddress
+          privateIPAddressVersion: 'IPv4'
+          privateIPAllocationMethod: 'Static'
+          privateIPAddress: privateIpAddress
         }
       }
     ]
-    nicType:'Standard'
-    dnsSettings:{
-      dnsServers:dnsServers
+    nicType: 'Standard'
+    dnsSettings: {
+      dnsServers: dnsServers
     }
   }
 }]
-resource virtualMachine 'Microsoft.Compute/virtualMachines@2022-03-01'=[for i in VirtualMachineCountRange: {
-  name:'${name}${i+1}'
-  location:location
-  tags:{
-    DisplayName:'VirtualMachine'
-    CostCenter:'Engineering'
+resource virtualMachine 'Microsoft.Compute/virtualMachines@2022-03-01' = [for i in VirtualMachineCountRange: {
+  name: '${name}${i + 1}'
+  location: location
+  tags: {
+    DisplayName: 'VirtualMachine'
+    CostCenter: 'Engineering'
   }
-  properties:{
-    availabilitySet:{
-      id:availabilitySetId
+  properties: {
+    availabilitySet: {
+      id: availabilitySetId
     }
-    proximityPlacementGroup:{
-      id:ppgrpId
+    proximityPlacementGroup: {
+      id: ppgrpId
     }
-    diagnosticsProfile:{
-      bootDiagnostics:{
-        enabled:true
-        storageUri:storageUri
+    diagnosticsProfile: {
+      bootDiagnostics: {
+        enabled: true
+        storageUri: storageUri
       }
     }
-    networkProfile:{
-      networkInterfaces:[
+    networkProfile: {
+      networkInterfaces: [
         {
-          id:resourceId('Microsoft.network/NetworkInterfaces','${name}${i+1}${networkInterfaceSuffix}')
-          properties:{
-            deleteOption:'Delete'
-            primary:true
+          id: resourceId('Microsoft.network/NetworkInterfaces', '${name}${i + 1}${networkInterfaceSuffix}')
+          properties: {
+            deleteOption: 'Delete'
+            primary: true
           }
         }
       ]
     }
-    hardwareProfile:{
-      vmSize:VmSize
+    hardwareProfile: {
+      vmSize: VmSize
     }
-    osProfile:{
-      adminUsername:adminUsername
-      adminPassword:adminPassword
-      computerName:'${name}${i+1}'
-      allowExtensionOperations:true
-      linuxConfiguration:{
-        disablePasswordAuthentication:true
-        provisionVMAgent:true
-        ssh:{
-          publicKeys:[
+    osProfile: {
+      adminUsername: adminUsername
+      adminPassword: adminPassword
+      computerName: '${name}${i + 1}'
+      allowExtensionOperations: true
+      linuxConfiguration: {
+        disablePasswordAuthentication: true
+        provisionVMAgent: true
+        ssh: {
+          publicKeys: [
             {
-              path:'/home/${adminUsername}/.ssh/authorized_keys'
-              keyData:adminPassword
+              path: '/home/${adminUsername}/.ssh/authorized_keys'
+              keyData: adminPassword
             }
           ]
         }
-        patchSettings:{
-          assessmentMode:'ImageDefault'
-          patchMode:'ImageDefault'
+        patchSettings: {
+          assessmentMode: 'ImageDefault'
+          patchMode: 'ImageDefault'
         }
       }
     }
-    storageProfile:{
-      osDisk:{
+    storageProfile: {
+      osDisk: {
         createOption: 'FromImage'
-        name:'${name}${i+1}_OS_disk'
-        caching:'ReadWrite'
-        deleteOption:'Delete'
-        osType:'Linux'
-        diskSizeGB:diskSize
-        managedDisk:{
-          storageAccountType:storageAccountType
+        name: '${name}${i + 1}_OS_disk'
+        caching: 'ReadWrite'
+        deleteOption: 'Delete'
+        osType: 'Linux'
+        diskSizeGB: diskSize
+        managedDisk: {
+          storageAccountType: storageAccountType
         }
       }
-      imageReference:{
-        offer:Offer
-        publisher:publisher
-        sku:sku
-        version:'latest'
+      imageReference: {
+        offer: Offer
+        publisher: publisher
+        sku: sku
+        version: 'latest'
       }
     }
-    scheduledEventsProfile:{
-      terminateNotificationProfile:{
-        enable:true
-        notBeforeTimeout:'PT5M'
+    scheduledEventsProfile: {
+      terminateNotificationProfile: {
+        enable: true
+        notBeforeTimeout: 'PT5M'
       }
     }
-    securityProfile:{
-      securityType:'TrustedLaunch'
-      uefiSettings:{
-        secureBootEnabled:true
-        vTpmEnabled:true
+    securityProfile: {
+      securityType: 'TrustedLaunch'
+      uefiSettings: {
+        secureBootEnabled: true
+        vTpmEnabled: true
       }
     }
   }
-  identity:{
-    type:'SystemAssigned'
+  identity: {
+    type: 'SystemAssigned'
   }
 }]
 resource shutdown_ComputeVM 'Microsoft.DevTestLab/schedules@2018-09-15' = [for i in VirtualMachineCountRange: {
-  name:'shutdown-computevm-${name}${i+1}'
-  location:location
-  tags:{
-    DisplayName:'Shutdown-ComputeVM'
-    CostCenter:'Engineering'
+  name: 'shutdown-computevm-${name}${i + 1}'
+  location: location
+  tags: {
+    DisplayName: 'Shutdown-ComputeVM'
+    CostCenter: 'Engineering'
   }
-  properties:{
-    status:autoShutdownStatus
-    taskType:'ComputeVmShutdownTask'
-    dailyRecurrence:{
-      time:autoShutdownTime
+  properties: {
+    status: autoShutdownStatus
+    taskType: 'ComputeVmShutdownTask'
+    dailyRecurrence: {
+      time: autoShutdownTime
     }
-    timeZoneId:autoShutdownTimezone
-    targetResourceId:resourceId('Microsoft.Compute/VirtualMachines','${name}${i+1}')
-    notificationSettings:{
-      status:autoShutdownNotificationStatus
+    timeZoneId: autoShutdownTimezone
+    targetResourceId: resourceId('Microsoft.Compute/VirtualMachines', '${name}${i + 1}')
+    notificationSettings: {
+      status: autoShutdownNotificationStatus
       notificationLocale: autoShutdownNotificationLocale
-      timeInMinutes:autoShutdownNotificationTimeInMinutes
-      emailRecipient:autoShutdownNotificationEmail
+      timeInMinutes: autoShutdownNotificationTimeInMinutes
+      emailRecipient: autoShutdownNotificationEmail
     }
   }
-  dependsOn:[
+  dependsOn: [
     virtualMachine
   ]
 }]

@@ -7,52 +7,52 @@ param nsgsuffix string
 param addressPrefixes array = [
   '172.16.0.0/16'
 ]
-param subnets array= [
+param subnets array = [
   {
-    name:'gatewaySubnet'
-    addressPrefix:'172.16.0.0/27'
-    serviceEndpoints:[
+    name: 'gatewaySubnet'
+    addressPrefix: '172.16.0.0/27'
+    serviceEndpoints: [
       {
-      service:'Microsoft.KeyVault'
+        service: 'Microsoft.KeyVault'
       }
       {
-      service:'Microsoft.Storage'
+        service: 'Microsoft.Storage'
       }
       {
-      service:'Microsoft.AzureActiveDirectory'
+        service: 'Microsoft.AzureActiveDirectory'
       }
       {
-      service:'Microsoft.sql'
+        service: 'Microsoft.sql'
       }
       {
-      service:'Microsoft.web'
+        service: 'Microsoft.web'
       }
       {
-      service:'Microsoft.ContainerRegistry'
+        service: 'Microsoft.ContainerRegistry'
       }
     ]
   }
   {
-  name:'subnet0'
-  addressPrefix: '172.16.1.0/24'
-  serviceEndpoints:[
+    name: 'subnet0'
+    addressPrefix: '172.16.1.0/24'
+    serviceEndpoints: [
       {
-      service:'Microsoft.KeyVault'
+        service: 'Microsoft.KeyVault'
       }
       {
-      service:'Microsoft.Storage'
+        service: 'Microsoft.Storage'
       }
       {
-      service:'Microsoft.AzureActiveDirectory'
+        service: 'Microsoft.AzureActiveDirectory'
       }
       {
-      service:'Microsoft.sql'
+        service: 'Microsoft.sql'
       }
       {
-      service:'Microsoft.web'
+        service: 'Microsoft.web'
       }
       {
-      service:'Microsoft.ContainerRegistry'
+        service: 'Microsoft.ContainerRegistry'
       }
     ]
   }
@@ -64,69 +64,69 @@ param subnetname string = 'subnet0'
   'existing'
 ])
 param vnetNewOrExisting string
-var name = '${toLower(replace(resourceGroup().name,'rg',''))}${suffix}'
-var nsgname = '${toLower(replace(resourceGroup().name,'rg',''))}${nsgsuffix}'
+var name = '${toLower(replace(resourceGroup().name, 'rg', ''))}${suffix}'
+var nsgname = '${toLower(replace(resourceGroup().name, 'rg', ''))}${nsgsuffix}'
 param settings object = {
-  location:location
+  location: location
   addressPrefixes: addressPrefixes
 }
-resource nsg 'Microsoft.Network/networkSecurityGroups@2022-01-01' existing ={
+resource nsg 'Microsoft.Network/networkSecurityGroups@2022-01-01' existing = {
   name: nsgname
 }
 var nsgId = nsg.id
-resource vnet 'Microsoft.Network/virtualNetworks@2022-01-01' =if(vnetNewOrExisting =='new') {
-  name:name
-  location:location
-  tags:{
-    DisplayName:'Virtual Networks'
-    CostCenter:'Engineering'
+resource vnet 'Microsoft.Network/virtualNetworks@2022-01-01' = if (vnetNewOrExisting == 'new') {
+  name: name
+  location: location
+  tags: {
+    DisplayName: 'Virtual Networks'
+    CostCenter: 'Engineering'
   }
-  properties:{
-    addressSpace:{
-      addressPrefixes:settings.addressPrefixes
+  properties: {
+    addressSpace: {
+      addressPrefixes: settings.addressPrefixes
     }
-    subnets:[for subnet in subnets:{
-      name:subnet.name
-      properties:{
-        addressPrefix:subnet.addressPrefix
-        serviceEndpoints:subnet.serviceEndpoints
-        privateEndpointNetworkPolicies:'Enabled'
-        privateLinkServiceNetworkPolicies:'Enabled'
+    subnets: [for subnet in subnets: {
+      name: subnet.name
+      properties: {
+        addressPrefix: subnet.addressPrefix
+        serviceEndpoints: subnet.serviceEndpoints
+        privateEndpointNetworkPolicies: 'Enabled'
+        privateLinkServiceNetworkPolicies: 'Enabled'
       }
     }]
-    enableDdosProtection:false
-    enableVmProtection:false
+    enableDdosProtection: false
+    enableVmProtection: false
   }
 }
 output name string = vnet.name
 output Id string = vnet.id
-resource subnet 'Microsoft.Network/virtualNetworks/subnets@2022-01-01'= {
+resource subnet 'Microsoft.Network/virtualNetworks/subnets@2022-01-01' = {
   name: subnetname
-  parent:vnet
-  properties:{
-    addressPrefix:'172.16.2.0/24'
-    serviceEndpoints:[
+  parent: vnet
+  properties: {
+    addressPrefix: '172.16.2.0/24'
+    serviceEndpoints: [
       {
-      service:'Microsoft.KeyVault'
+        service: 'Microsoft.KeyVault'
       }
       {
-      service:'Microsoft.Storage'
+        service: 'Microsoft.Storage'
       }
       {
-      service:'Microsoft.AzureActiveDirectory'
+        service: 'Microsoft.AzureActiveDirectory'
       }
       {
-      service:'Microsoft.sql'
+        service: 'Microsoft.sql'
       }
       {
-      service:'Microsoft.web'
+        service: 'Microsoft.web'
       }
       {
-      service:'Microsoft.ContainerRegistry'
+        service: 'Microsoft.ContainerRegistry'
       }
     ]
-    networkSecurityGroup:{
-      id:nsgId
+    networkSecurityGroup: {
+      id: nsgId
     }
   }
 }

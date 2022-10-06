@@ -27,73 +27,73 @@ param kind string = 'StorageV2'
 param accessTier string = 'Hot'
 @description('Public IpAddress where storage is accessible over the internet')
 param publicIpAddress string
-param vnetsuffix string ='vnet'
+param vnetsuffix string = 'vnet'
 @description('Specify whether to create a new storage infrastructure or use an existing')
 @allowed([
   'new'
   'existing'
 ])
 param stgNewOrExisting string
-var vnetName = '${toLower(replace(resourceGroup().name,'rg',''))}${vnetsuffix}'
+var vnetName = '${toLower(replace(resourceGroup().name, 'rg', ''))}${vnetsuffix}'
 resource vnet 'Microsoft.Network/virtualNetworks@2022-01-01' existing = {
   name: vnetName
 }
 var name = '${uniqueString(resourceGroup().id)}${suffix}'
 resource stga 'Microsoft.Storage/storageAccounts@2022-05-01' = if (stgNewOrExisting == 'new') {
-  name:name
-  location:location
-  sku:{
+  name: name
+  location: location
+  sku: {
     name: sku
   }
-  kind:kind
-  tags:{
-    DisplayName:'Storage Account'
-    CostCenter:'Engineering'
+  kind: kind
+  tags: {
+    DisplayName: 'Storage Account'
+    CostCenter: 'Engineering'
   }
-  properties:{
-    accessTier:accessTier
-    allowBlobPublicAccess:true
-    allowCrossTenantReplication:true
-    allowedCopyScope:'AAD'
-    allowSharedKeyAccess:true
-    minimumTlsVersion:'TLS1_2'
-    supportsHttpsTrafficOnly:true
-    isHnsEnabled:true
-    isLocalUserEnabled:true
-    isNfsV3Enabled:true
+  properties: {
+    accessTier: accessTier
+    allowBlobPublicAccess: true
+    allowCrossTenantReplication: true
+    allowedCopyScope: 'AAD'
+    allowSharedKeyAccess: true
+    minimumTlsVersion: 'TLS1_2'
+    supportsHttpsTrafficOnly: true
+    isHnsEnabled: true
+    isLocalUserEnabled: true
+    isNfsV3Enabled: true
     isSftpEnabled: true
-    largeFileSharesState:'Enabled'
-    defaultToOAuthAuthentication:true
-    dnsEndpointType:'Standard'
-    networkAcls:{
+    largeFileSharesState: 'Enabled'
+    defaultToOAuthAuthentication: true
+    dnsEndpointType: 'Standard'
+    networkAcls: {
       defaultAction: 'Deny'
-      bypass:'AzureServices'
-      virtualNetworkRules:[
+      bypass: 'AzureServices'
+      virtualNetworkRules: [
         {
-          id:'${vnet.id}/subnets/gatewaySubnet'
-          action:'Allow'
-          state:'Succeeded'
+          id: '${vnet.id}/subnets/gatewaySubnet'
+          action: 'Allow'
+          state: 'Succeeded'
         }
         {
-          id:'${vnet.id}/subnets/subnet0'
-          action:'Allow'
-          state:'Succeeded'
+          id: '${vnet.id}/subnets/subnet0'
+          action: 'Allow'
+          state: 'Succeeded'
         }
 
       ]
-      ipRules:[
+      ipRules: [
         {
           value: publicIpAddress
-          action:'Allow'
+          action: 'Allow'
         }
       ]
     }
-    keyPolicy:{
+    keyPolicy: {
       keyExpirationPeriodInDays: 90
     }
-    sasPolicy:{
+    sasPolicy: {
       expirationAction: 'Log'
-      sasExpirationPeriod:'30:00:00:00'
+      sasExpirationPeriod: '30:00:00:00'
     }
   }
 }
