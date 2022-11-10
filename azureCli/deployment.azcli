@@ -1,3 +1,3 @@
 az deployment sub create --name deployrg --location uksouth --template-file C:\development\Bicep\rg\main.bicep
 az deployment group create --name nsgdeploy -g azuksengnr-rg --template-file C:\development\Bicep\resource\secmain.bicep
-az group delete -g azuksengrrg --yes
+az group list  --query "[location == uksouth]"
