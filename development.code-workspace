@@ -115,7 +115,8 @@
   "terminal.explorerKind": "integrated",
   "problems.decorations.enabled": true,
   "powershell.cwd": "c:\\development\\Bicep",
-  "bicep.importsEnabledExperimental":true
+  "bicep.importsEnabledExperimental":true,
+  "extensions.ignoreRecommendations": true
 },
 "extensions": {
   "recommendations": [
