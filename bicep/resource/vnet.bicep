@@ -95,7 +95,11 @@ resource vnet 'Microsoft.Network/virtualNetworks@2022-01-01' = if (vnetNewOrExis
       }
     }]
     enableDdosProtection: false
-    enableVmProtection: false
+    enableVmProtection: true
+    encryption:{
+      enabled:true
+      enforcement:'DropUnencrypted'
+    }
   }
 }
 output name string = vnet.name
