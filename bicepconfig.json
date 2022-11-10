@@ -96,6 +96,12 @@
 				},
 				"use-recent-api-versions":{
 					"level":  "warning"
+				},
+				"decompiler-cleanup":{
+					"level": "warning"
+				},
+				"use-resource-id-functions":{
+					"level": "warning"
 				}
 			}
 		}
