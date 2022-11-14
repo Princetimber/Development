@@ -353,5 +353,6 @@ MigrationBackup/
 .Terraform/
 .Terraform.tfstate.lock.info
 .Terraform.lock.hcl
-.ftstate.lock.info
-.tfstate
+.tfstate.lock.info
+terraform.tfstate
+terraform.tfstate.Backup
