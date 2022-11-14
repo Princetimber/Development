@@ -11,6 +11,7 @@ var allowRdpInboundTraffic = '${name}/Allow_Rdp_Inbound_Traffic'
 var allowSSHInboundTraffic = '${name}/Allow_ssh_Inbound_Traffic'
 var allowWinRMInboundTraffic = '${name}/Allow_WinRM_Inbound_Traffic'
 var allowDNSInboundTraffic = '${name}/Allow_DNS_Inbound_Traffic'
+var allowNTPInboundUDPTraffic = '${name}/UDP_NTP_Inbound'
 
 resource nsg 'Microsoft.Network/networkSecurityGroups@2022-01-01' = {
   name: name
@@ -27,7 +28,7 @@ resource nsg 'Microsoft.Network/networkSecurityGroups@2022-01-01' = {
         properties: {
           direction: 'Inbound'
           priority: 201
-          protocol: '*'
+          protocol: 'Tcp'
           access: 'Allow'
           description: 'Allow_https_inbound_traffic'
           sourceAddressPrefix: '*'
@@ -42,7 +43,7 @@ resource nsg 'Microsoft.Network/networkSecurityGroups@2022-01-01' = {
           description: 'Allow_http_inbound_traffic'
           access: 'Allow'
           direction: 'Inbound'
-          protocol: '*'
+          protocol: 'Tcp'
           priority: 202
           sourceAddressPrefix: '*'
           sourcePortRange: '*'
@@ -57,7 +58,7 @@ resource nsg 'Microsoft.Network/networkSecurityGroups@2022-01-01' = {
           description: 'Allow_Rdp_inbound_traffic'
           access: 'Allow'
           direction: 'Inbound'
-          protocol: '*'
+          protocol: 'Tcp'
           priority: 203
           sourceAddressPrefixes: sourceAddressPrefixes
           sourcePortRange: '*'
@@ -105,6 +106,20 @@ resource nsg 'Microsoft.Network/networkSecurityGroups@2022-01-01' = {
           sourcePortRange: '*'
           destinationAddressPrefix: destinationAddressPrefix
           destinationPortRange: '53'
+        }
+      }
+      {
+        name: 'UDP_NTP_Inbound'
+        properties: {
+          description: 'Allow UDP NTP inbound traffic'
+          access: 'Allow'
+          direction: 'Inbound'
+          protocol: 'Udp'
+          priority: 207
+          sourceAddressPrefix: '*'
+          sourcePortRange: '*'
+          destinationAddressPrefix: destinationAddressPrefix
+          destinationPortRange: '123'
         }
       }
     ]
@@ -211,6 +226,23 @@ resource allowDNSInboundTrafficRule 'Microsoft.Network/networkSecurityGroups/sec
     sourcePortRange: '*'
     destinationAddressPrefix: destinationAddressPrefix
     destinationPortRange: '53'
+  }
+}
+resource allowNTPInboundTrafficRule 'Microsoft.Network/networkSecurityGroups/securityRules@2022-05-01' = {
+  name: allowNTPInboundUDPTraffic
+  dependsOn: [
+    nsg
+  ]
+  properties: {
+    description: 'Allow UDP NTP inbound traffic'
+    access: 'Allow'
+    direction: 'Inbound'
+    protocol: 'Udp'
+    sourceAddressPrefix: '*'
+    sourcePortRange: '*'
+    destinationAddressPrefix: destinationAddressPrefix
+    destinationPortRange: '123'
+    priority: 207
   }
 }
 output nsgname string = nsg.name
