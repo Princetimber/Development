@@ -132,7 +132,7 @@ resource allowhttpsInboundTrafficRule 'Microsoft.Network/networkSecurityGroups/s
   ]
   properties: {
     direction: 'Inbound'
-    protocol: '*'
+    protocol: 'Tcp'
     access: 'Allow'
     description: 'Allow_https_inbound_traffic'
     priority: 201
@@ -151,7 +151,7 @@ resource allowhttpInboundTrafficRule 'Microsoft.Network/networkSecurityGroups/se
     description: 'Allow_http_inbound_traffic'
     access: 'Allow'
     direction: 'Inbound'
-    protocol: '*'
+    protocol: 'Tcp'
     priority: 202
     sourceAddressPrefix: '*'
     sourcePortRange: '*'
@@ -169,7 +169,7 @@ resource allowRdpInboundTrafficRule 'Microsoft.Network/networkSecurityGroups/sec
     description: 'Allow_Rdp_inbound_traffic'
     access: 'Allow'
     direction: 'Inbound'
-    protocol: '*'
+    protocol: 'Tcp'
     priority: 203
     sourceAddressPrefixes: sourceAddressPrefixes
     sourcePortRange: '*'
