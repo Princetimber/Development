@@ -1,0 +1,2 @@
+$n = @('azure-Cli', 'googleChrome', 'agentRansack', 'beyondCompare', 'greenShot', 'firefox', 'vsCode', 'wireGuard', 'Zoom', 'pwsh', 'notepadplusplus', 'terraform')
+$n | ForEach-Object { choco install $_ -y }
