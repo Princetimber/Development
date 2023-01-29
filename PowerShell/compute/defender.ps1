@@ -19,7 +19,7 @@ $id = @("56a863a9-875e-4185-98a7-b882c64b5ce5", "7674ba52-37eb-4a4f-a9a1-f0f9a16
 $id | ForEach-Object -Parallel { Add-MpPreference -AttackSurfaceReductionRules_Ids $_ -AttackSurfaceReductionRules_Actions Enabled }
 $id = @("e6db77e5-3df2-4cf1-b95a-636979351e5b", "01443614-cd74-433a-b99e-2ecdc07bfc25")
 $id | ForEach-Object -Parallel { Add-MpPreference -AttackSurfaceReductionRules_Ids $_ -AttackSurfaceReductionRules_Actions audit }
-$n = @('Beyond Compare 4\BCompare.exe', 'git\bin\git.exe', 'google\chrome\application\chrome.exe', 'greenshot\greenshot.exe', 'Microsoft VS Code\code.exe', 'Moxilla FireFox\firefox.exe', 'Mythicsoft\Agent Ransack\agentRansack.exe', 'notepad++\notepad++.exe', 'powershell\7\pwsh.exe', 'PowerToys\powertoys.exe')
+$n = @('Beyond Compare 4\BCompare.exe', 'git\bin\git.exe', 'google\chrome\application\chrome.exe', 'greenshot\greenshot.exe', 'Microsoft VS Code\code.exe', 'Mozilla FireFox\firefox.exe', 'Mythicsoft\Agent Ransack\agentRansack.exe', 'notepad++\notepad++.exe', 'powershell\7\pwsh.exe', 'PowerToys\powertoys.exe')
 $path = $n | ForEach-Object -Parallel { Join-Path -Path $env:ProgramFiles -ChildPath $_ }
 $path | ForEach-Object -Parallel { Add-MpPreference -AttackSurfaceReductionOnlyExclusions $_ }
 $path | ForEach-Object -Parallel { Add-MpPreference -ControlledFolderAccessAllowedApplications $_ }
