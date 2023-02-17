@@ -115,11 +115,13 @@
   "terminal.explorerKind": "integrated",
   "problems.decorations.enabled": true,
   "powershell.cwd": "c:\\development\\Bicep",
-  "extensions.ignoreRecommendations": true
+  "extensions.ignoreRecommendations": true,
+  "stylelint.enable": true
 },
 "extensions": {
   "recommendations": [
     "4ops.terraform",
+    "stylelint.vscode-stylelint",
     "aaron-bond.better-comments",
     "christian-kohler.npm-intellisense",
     "dbaeumer.vscode-eslint",
