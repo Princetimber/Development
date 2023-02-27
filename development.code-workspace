@@ -116,11 +116,24 @@
   "problems.decorations.enabled": true,
   "powershell.cwd": "c:\\development\\Bicep",
   "extensions.ignoreRecommendations": true,
-  "stylelint.enable": true
+  "stylelint.enable": true,
+  "github.copilot.enable": {
+    "*": true,
+    "yaml": false,
+    "plaintext": false,
+    "markdown": false
+  },
+  "github.copilot.inlineSuggest.enable": true,
+  "github.copilot.advanced": {
+    "enable": true,
+    "enableInlineSuggest": true,
+    "enableInlineSuggestForAllLanguages": true
+  }
 },
 "extensions": {
   "recommendations": [
     "4ops.terraform",
+    "GitHub.copilot",
     "stylelint.vscode-stylelint",
     "aaron-bond.better-comments",
     "christian-kohler.npm-intellisense",
