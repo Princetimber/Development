@@ -1,10 +1,19 @@
+# Define VM name(s)
 $n = @('gateway', 'apache')
+
+# Define VM Memory in MB
 $memoryStartupBytes = 8200MB
+
+# Define the installation media Path
 $media = 'ubuntu.iso'
 $mediaPath = 'e:\media'
 $installMediaPath = Join-Path -Path $mediaPath -ChildPath $media
+
+# Define VM switch Name
 $switchName = (Get-VMSwitch -Name datacenter).Name
+
 foreach ($i in $n) {
+  # Define VM Path
   $path = Join-Path -Path e:\hyper-V\VirtualMachines -ChildPath $i
   $newVHDPath = Join-Path -Path e:\hyper-V\virtualHardDisks -ChildPath "$i\OSDisk.vhdx"
   $param = @{
@@ -65,6 +74,7 @@ foreach ($i in $n) {
   }
   Set-VMSecurity @param
 }
+
 foreach ($i in $n) {
   $param = @{
     VMName               = $i
