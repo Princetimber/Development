@@ -9,9 +9,9 @@ Set-MpPreference -CheckForSignaturesBeforeRunningScan $true -CloudBlockLevel Def
   -HighThreatDefaultAction Block -LowThreatDefaultAction Quarantine -ModerateThreatDefaultAction Quarantine -SevereThreatDefaultAction Block `
   -MAPSReporting Advanced -PlatformUpdatesChannel Staged -QuarantinePurgeItemsAfterDelay 30 `
   -PUAProtection Enabled -RealTimeScanDirection Both -RemediationScheduleDay Never -ScanParameters Quick -ScanAvgCPULoadFactor 50 `
-  -ScanOnlyIfIdleEnabled $false -ScanScheduleDay Everyday -ScanScheduleTime 600 -SignatureFallbackOrder MicrosoftUpdateServer `
+  -ScanOnlyIfIdleEnabled $false -ScanScheduleDay Everyday -ScanScheduleTime 10:00:00 -SignatureFallbackOrder MicrosoftUpdateServer `
   -SignatureBlobUpdateInterval 60 -SignatureUpdateInterval 4 -SubmitSamplesConsent SendAllSamples `
-  -UnknownThreatDefaultAction Quarantine -AllowSwitchToAsyncInspection $true -DisableEmailScanning $false
+  -UnknownThreatDefaultAction Quarantine -AllowSwitchToAsyncInspection $true -DisableEmailScanning $false -EnableNetworkProtection Enabled -DisableNetworkProtectionPerfTelemetry $false
 $n = @('File and Printer Sharing*', 'Remote Event*', 'Remote Schedule*', 'Remote Service*', 'Remote Volume*', 'Windows Defender Fire*', 'Windows Management*', 'Windows Remote*')
 $n | ForEach-Object -Parallel { Set-NetFirewallRule -DisplayGroup $_ -Enabled True -Action Allow -Profile Private -Direction Inbound -PassThru }
 $id = @("56a863a9-875e-4185-98a7-b882c64b5ce5", "7674ba52-37eb-4a4f-a9a1-f0f9a1619a2c", "d4f940ab-401b-4efc-aadc-ad5f3c50688a", "9e6c4e1f-7d60-472f-ba1a-a39ef669e4b2", "be9ba2d9-53ea-4cdc-84e5-9b1eeee46550", "5beb7efe-fd9a-4556-801d-275e5ffc04cc", `
