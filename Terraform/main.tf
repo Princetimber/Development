@@ -21,6 +21,9 @@ provider "azurerm" {
     }
   }
 }
+provider "azuread" {
+  environment = "public"
+}
 resource "azurerm_resource_group" "rg" {
   location = "uksouth"
   name     = "azuksterraformrg"
