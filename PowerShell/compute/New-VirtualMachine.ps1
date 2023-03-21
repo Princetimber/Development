@@ -30,7 +30,7 @@ function set-VMConfigurationSettings {
     [Parameter(Mandatory = $true, Position = 0)]
     [string]$VMName,
     [Parameter(Mandatory = $false, Position = 1)]
-    [string]$media = @('ubuntu.iso', 'ws2k22.iso', 'w1121h2.iso'),
+    [string]$media = @('ubuntu.iso','kali.iso','ws2k22.iso', 'w1121h2.iso'),
     [Parameter(Mandatory = $false, Position = 2)]
     [string]$mediaBinaryLocation = 'E:\Media',
     [Parameter(Mandatory = $false, Position = 3)]
@@ -45,7 +45,7 @@ function set-VMConfigurationSettings {
   }
   Add-VMDvdDrive @param
   $VMDvDDrive = Get-VMDvdDrive -VMName $VMName
-  if ($media -match 'ubuntu.iso') {
+  if ($media -match 'kali.iso' -or $media -match 'ubuntu.iso') {
     $param = @{
       VMName               = $VMName
       FirstBootDevice      = $VMDvDDrive
@@ -55,7 +55,7 @@ function set-VMConfigurationSettings {
       Confirm              = $false
     }
     Set-VMFirmware @param
-  }elseif ($media -notmatch 'ubuntu.iso') {
+  }elseif ($media -notmatch 'kali.iso' -or $media -notmatch 'ubuntu.iso') {
     $param = @{
       VMName               = $VMName
       FirstBootDevice      = $VMDvDDrive
