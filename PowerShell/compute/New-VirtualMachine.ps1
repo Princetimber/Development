@@ -120,21 +120,18 @@ function set-VMConfigurationSettings {
   }
   Set-VMSecurity @param
   if ($AddDCSetting.IsPresent) {
-    $ChildPaths = @('logs.vhdx', 'sysvol.vhdx', 'ntds.vhdx')
-    $newVHDPath = $ChildPaths | ForEach-Object { Join-Path -Path ($Path.Replace("virtualMachines", "VirtualHardDisks")) -ChildPath $VMName\"$_" }
-    $NewVHDPath | ForEach-Object {
+    $childPath = @('logs.vhdx', 'sysvol.vhdx', 'ntds.vhdx')
+    if ($childPath -match 'logs.vhdx') {
+      $path = Join-Path -Path $Path.Replace("virtualMachines", "VirtualHardDisks") -ChildPath $VMName\"logs.vhdx"
       $param = @{
-        Path      = $_
-        SizeBytes = 30GB
-        Dynamic   = $false
+        Path      = $path
+        SizeBytes = 20GB
         Confirm   = $false
       }
       New-VHD @param
-    }
-    if ($ChildPaths -match 'logs.vhdx') {
       $param = @{
         VMName             = $VMName
-        Path               = $newVHDPath[0]
+        Path               = $path
         ControllerType     = 'iscsi'
         ControllerNumber   = 0
         ControllerLocation = 2
@@ -142,10 +139,17 @@ function set-VMConfigurationSettings {
       }
       Add-VMHardDiskDrive @param
     }
-    if ($ChildPaths -match 'sysvol.vhdx') {
+    if ($childPath -match 'sysvol.vhdx') {
+      $path = Join-Path -Path $Path.Replace("virtualMachines", "VirtualHardDisks") -ChildPath $VMName\"sysvol.vhdx"
+      $param = @{
+        Path      = $path
+        SizeBytes = 20GB
+        Confirm   = $false
+      }
+      New-VHD @param
       $param = @{
         VMName             = $VMName
-        Path               = $newVHDPath[1]
+        Path               = $path
         ControllerType     = 'iscsi'
         ControllerNumber   = 0
         ControllerLocation = 3
@@ -153,10 +157,17 @@ function set-VMConfigurationSettings {
       }
       Add-VMHardDiskDrive @param
     }
-    if ($ChildPaths -match 'ntds.vhdx') {
+    if ($childPath -match 'ntds.vhdx') {
+      $path = Join-Path -Path $Path.Replace("virtualMachines", "VirtualHardDisks") -ChildPath $VMName\"ntds.vhdx"
+      $param = @{
+        Path      = $path
+        SizeBytes = 20GB
+        Confirm   = $false
+      }
+      New-VHD @param
       $param = @{
         VMName             = $VMName
-        Path               = $newVHDPath[2]
+        Path               = $path
         ControllerType     = 'iscsi'
         ControllerNumber   = 0
         ControllerLocation = 4
@@ -166,8 +177,8 @@ function set-VMConfigurationSettings {
     }
   }
   else {
-    Write-Output "[system.DateTime]::Now - VM $VMName has been created without the DC settings"
-    Write-Output "[system.DateTime]::Now - [INFO] - To add the DC Settings, please run the following command: Set-VMConfigurationSettings -VMName $VMName -AddDCSetting"
+    Write-Output [system.DateTime]::Now.ToString("dd/MM/yyyy HH:MM")+"-[INFO] - No Domain Controller Settings added"
+    Write-Output [system.DateTime]::Now.ToString("dd/MM/yyyy HH:MM")+" -[INFO] - To add the Domain Controller Settings, please run the following command: Set-VMConfigurationSettings -VMName $VMName -AddDCSetting"
   }
   if ($AddConfigMgrSetting.IsPresent) {
     $param = @{
@@ -308,7 +319,7 @@ function set-VMConfigurationSettings {
 
   }
   else {
-    Write-Output "[System.DateTime]::Now - [INFO] - No ConfigMgr Setting added to VMName: $VMName"
-    Write-Output "[System.DateTime]::Now - [INFO] - To add the ConfigMgr Settings, please run the following command: Set-VMConfigurationSettings -VMName $VMName -AddConfigMgrSetting"
+    Write-Output [System.DateTime]::Now.ToString(dd/MM/yyyy HH:MM)+ " - [INFO] - No ConfigMgr Setting added to VMName: $VMName"
+    Write-Output  [System.DateTime]::Now.ToString(dd/MM/yyyy HH:MM)+" - [INFO] - To add the ConfigMgr Settings, please run the following command: Set-VMConfigurationSettings -VMName $VMName -AddConfigMgrSetting"
   }
 }
