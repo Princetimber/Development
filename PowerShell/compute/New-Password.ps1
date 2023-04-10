@@ -20,28 +20,30 @@
   Generate-Password -PasswordLength 8
   This will generate a random password with a length of 8.
 #>
-[cmdletbinding()]
-Param(
-  [Parameter(Mandatory = $true, Position = 0, HelpMessage = "Password length", ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)][ValidateRange(8, 30)][int]$PasswordLength,
-  [Parameter(Mandatory = $false, Position = 1, HelpMessage = "Convert to Secure string", ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)][switch]$ConvertToSecureString
-)
-# Validate password length
-if ($PasswordLength -lt 8 -or $PasswordLength -gt 30) {
-  throw "Password length must be between 8 and 30"
-}
-# Generate password
-$CharSet = @{
-  UpperCase   = (97..122) | ForEach-Object { [char]$_ }
-  LowerCase   = (65..90) | ForEach-Object { [char]$_ }
-  Numeric     = (48..57) | ForEach-Object { [char]$_ }
-  SpecialChar = (33..47) + (58..64) + (91..96) + (123..126) | ForEach-Object { [char]$_ }
-}
-$StringSet = $CharSet.UpperCase + $CharSet.LowerCase + $CharSet.Numeric + $CharSet.SpecialChar
-$Password = -join (Get-Random -InputObject $StringSet -Count $PasswordLength)
-# Convert to secure string
-if ($ConvertToSecureString.IsPresent) {
-  ConvertTo-SecureString -String $Password -AsPlainText -Force
-}
-else {
-  $Password
+Function New-Password {
+  [cmdletbinding()]
+  Param(
+    [Parameter(Mandatory = $true, Position = 0, HelpMessage = "Password length", ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)][ValidateRange(8, 30)][int]$PasswordLength,
+    [Parameter(Mandatory = $false, Position = 1, HelpMessage = "Convert to Secure string", ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)][switch]$ConvertToSecureString
+  )
+  # Validate password length
+  if ($PasswordLength -lt 8 -or $PasswordLength -gt 30) {
+    throw "Password length must be between 8 and 30."
+  }
+  # Generate password
+  $CharSet = @{
+    UpperCase   = (97..122) | ForEach-Object { [char]$_ }
+    LowerCase   = (65..90) | ForEach-Object { [char]$_ }
+    Numeric     = (48..57) | ForEach-Object { [char]$_ }
+    SpecialChar = (33..47) + (58..64) + (91..96) + (123..126) | ForEach-Object { [char]$_ }
+  }
+  $StringSet = $CharSet.UpperCase + $CharSet.LowerCase + $CharSet.Numeric + $CharSet.SpecialChar
+  $Password = -join (Get-Random -InputObject $StringSet -Count $PasswordLength)
+  # Convert to secure string
+  if ($ConvertToSecureString.IsPresent) {
+    ConvertTo-SecureString -String $Password -AsPlainText -Force
+  }
+  else {
+    $Password
+  }
 }
