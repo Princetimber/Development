@@ -1,21 +1,30 @@
+<#
+.SYNOPSIS
+This function creates a new virtual machine with the specified parameters.
+.DESCRIPTION
+  This function creates a new virtual machine with the specified parameters. it also sets the VM configuration settings based on Virtual machine use case. e.g. if the VM is a DC, it will set the VM to use the DC configuration settings.
+.NOTES
+  Information or caveats about the function e.g. 'This function is not supported in Linux'
+.LINK
+  Specify a URI to a help page, this will show when Get-Help -Online is used.
+.EXAMPLE
+  New-VirtualMachine -Name "DC01" -Path "C:\VirtualMachines\DC01" -MemoryStartupSize "8GB" -newVHDSize "80GB"
+  This command creates a new virtual machine with the name DC01, the path is C:\VirtualMachines\DC01, the memory startup size is 8GB and the new VHD size is 80GB.
+.EXAMPLE
+Set-VMConfigurationSettings -VMName "DC01" -media "ws2k22.iso" -mediaBinaryLocation "E:\Media" -AddDCSetting
+This command sets the VM configuration settings for the DC01 VM. The media is set to ws2k22.iso, the media binary location is E:\Media and the AddDCSetting switch is set.
+.EXAMPLE
+Set-VMConfigurationSettings -VMName "DC01" -media "ws2k22.iso" -mediaBinaryLocation "E:\Media" -AddConfigMgrSetting
+This command sets the VM configuration settings for the DC01 VM. The media is set to ws2k22.iso, the media binary location is E:\Media and the AddConfigMgrSetting switch is set.
+#>
 Function New-VirtualMachine {
   [CmdletBinding()]
   Param (
-    [Parameter(Mandatory = $true, Position = 0)]
-    [ValidateNotNullOrEmpty()]
-    [string]$Name,
-    [Parameter(Mandatory = $true, Position = 1)]
-    [ValidateNotNullOrEmpty()]
-    [string]$Path,
-    [Parameter(Mandatory = $false, Position = 2)]
-    [ValidateSet('datacenter', 'internal')]
-    [string]$switchName = 'datacenter',
-    [Parameter(Mandatory = $true, Position = 3)]
-    [ValidateSet("4GB", "8GB", "16GB", "32GB")]
-    [string]$MemoryStartupSize = "4GB",
-    [Parameter(Mandatory = $false, Position = 4)]
-    [ValidateSet("40GB", "80GB", "100GB", "120GB")]
-    [string]$newVHDSize = "40GB"
+    [Parameter(Mandatory = $true, Position = 0, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)][ValidateNotNullOrEmpty()][string]$Name,
+    [Parameter(Mandatory = $true, Position = 1, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)][ValidateNotNullOrEmpty()][string]$Path,
+    [Parameter(Mandatory = $false, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 2)][ValidateSet('datacenter', 'internal')][string]$switchName = 'datacenter',
+    [Parameter(Mandatory = $true, Position = 3, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)][ValidateSet("4GB", "8GB", "16GB", "32GB")][string]$MemoryStartupSize = "4GB",
+    [Parameter(Mandatory = $false, Position = 4, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)][ValidateSet("40GB", "80GB", "100GB", "120GB")][string]$newVHDSize = "40GB"
   )
   if ([string]::IsNullOrEmpty($Name)) {
     Write-Error "Name cannot be null or empty"
