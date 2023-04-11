@@ -15,6 +15,8 @@ This function creates a new virtual machine with the specified parameters.
   The size of the new VHD to be created for the virtual machine.
 .PARAMETER VMName
   The name of the virtual machine to be configured.
+.PARAMETER Configure
+  The switch to set the VM configuration settings.
 .PARAMETER media
   The media to be used for the virtual machine.
 .PARAMETER mediaBinaryLocation
@@ -26,18 +28,29 @@ This function creates a new virtual machine with the specified parameters.
 .PARAMETER AddConfigMgrSetting
   The switch to set the VM configuration settings for a ConfigMgr VM use case.
 .NOTES
-  Information or caveats about the function e.g. 'This function is not supported in Linux'
+  Information or caveats about the function e.g. 'This function is not supported in Linux'.
+The following paramters are not hardcoded and can be modified to meet org needs. These includes the -Path, -switchName, -MemoryStartUpBytes, -newVHDSize, -media, -mediaBinaryLocation, -mediaPath
 .LINK
   Specify a URI to a help page, this will show when Get-Help -Online is used.
 .EXAMPLE
-  New-VirtualMachine -Name "DC01" -Path "C:\VirtualMachines\DC01" -MemoryStartupSize "8GB" -newVHDSize "80GB"
-  This command creates a new virtual machine with the name DC01, the path is C:\VirtualMachines\DC01, the memory startup size is 8GB and the new VHD size is 80GB.
+  New-VirtualMachine -Name "web1" -Path "E:\hyper-v\virtualMachines\web1" -switchName "datacenter" -MemoryStartUpBytes 4GB -newVHDSize 40GB -Create
+  This command creates a new virtual machine with the specified parameters.
+  This command will only execute the New-VM cmdlet if the -Create switch is specified.
 .EXAMPLE
-Set-VMConfigurationSettings -VMName "DC01" -media "ws2k22.iso" -mediaBinaryLocation "E:\Media" -AddDCSetting
-This command sets the VM configuration settings for the DC01 VM. The media is set to ws2k22.iso, the media binary location is E:\Media and the AddDCSetting switch is set.
+  set-VMConfigurationSettings -VMName "web1" -media ubuntu.iso -Configure
+  This command sets the VM configuration settings for the specified VM.
+  This command will only execute the Set-VM cmdlet if the -Configure switch is specified.
+  This is targetting a generic VM use case.
 .EXAMPLE
-Set-VMConfigurationSettings -VMName "DC01" -media "ws2k22.iso" -mediaBinaryLocation "E:\Media" -AddConfigMgrSetting
-This command sets the VM configuration settings for the DC01 VM. The media is set to ws2k22.iso, the media binary location is E:\Media and the AddConfigMgrSetting switch is set.
+  set-VMConfigurationSettings -VMName "web1" -media ubuntu.iso -Configure -AddDCSetting
+  This command sets the VM configuration settings for the specified VM.
+  This command will only execute the Set-VM cmdlet if the -Configure and -AddDCSetting switches are specified.
+  This is targetting a DC VM use case.
+.EXAMPLE
+  set-VMConfigurationSettings -VMName "web1" -media ubuntu.iso -Configure -AddConfigMgrSetting
+  This command sets the VM configuration settings for the specified VM.
+  This command will only execute the Set-VM cmdlet if the -Configure and -AddConfigMgrSetting switches are specified.
+  This is targetting a ConfigMgr VM use case.
 #>
 Function New-VirtualMachine {
   [CmdletBinding()]
@@ -88,21 +101,13 @@ Function New-VirtualMachine {
 function set-VMConfigurationSettings {
   [CmdletBinding()]
   Param(
-    [Parameter(Mandatory = $true, Position = 0)]
-    [ValidateNotNullOrEmpty()]
-    [string]$VMName,
-    [Parameter(Mandatory = $false, Position = 1)]
-    [ValidateSet('ubuntu.iso', 'kali.iso', 'ws2k22.iso', 'w1121h2.iso')]
-    [string]$media = 'ubuntu.iso',
-    [Parameter(Mandatory = $false, Position = 2)]
-    [ValidateNotNullOrEmpty()]
-    [string]$mediaBinaryLocation = 'E:\Media',
-    [Parameter(Mandatory = $false, Position = 3)]
-    [string]$mediaPath = (Join-Path -Path $mediaBinaryLocation -ChildPath $media),
-    [Parameter(Mandatory = $false, Position = 4)]
-    [switch]$AddDCSetting,
-    [Parameter(Mandatory = $false, Position = 5)]
-    [switch]$AddConfigMgrSetting
+    [Parameter(Mandatory = $true, Position = 0)][ValidateNotNullOrEmpty()][string]$VMName,
+    [Parameter(Mandatory = $false, Position = 1)][ValidateSet('ubuntu.iso', 'kali.iso', 'ws2k22.iso', 'w1121h2.iso')][string]$media = 'ubuntu.iso',
+    [Parameter(Mandatory = $false, Position = 2)][ValidateNotNullOrEmpty()][string]$mediaBinaryLocation = 'E:\Media',
+    [Parameter(Mandatory = $false, Position = 3)][string]$mediaPath = (Join-Path -Path $mediaBinaryLocation -ChildPath $media),
+    [Parameter(Mandatory = $false, Position = 4, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)][switch]$Configure,
+    [Parameter(Mandatory = $false, Position = 5)][switch]$AddDCSetting,
+    [Parameter(Mandatory = $false, Position = 6)][switch]$AddConfigMgrSetting
   )
   if ([string]::IsNullOrEmpty($VMName)) {
     Write-Error "VMName cannot be null or empty"
@@ -110,84 +115,109 @@ function set-VMConfigurationSettings {
   if ([string]::IsNullOrEmpty($mediaBinaryLocation)) {
     Write-Error "mediaBinaryLocation cannot be null or empty"
   }
-  $param = @{
-    VMName             = $VMName
-    Path               = $mediaPath
-    ControllerNumber   = 0
-    ControllerLocation = 1
-    Confirm            = $false
-  }
-  Add-VMDvdDrive @param
-  $VMDvDDrive = Get-VMDvdDrive -VMName $VMName
-  If ($media -like 'Kali.iso' -or $media -like 'ubuntu.iso') {
+  if ($Configure.IsPresent) {
+    $param = @{
+      VMName             = $VMName
+      Path               = $mediaPath
+      ControllerNumber   = 0
+      ControllerLocation = 1
+      Confirm            = $false
+    }
+    Add-VMDvdDrive @param
+    $VMDvDDrive = Get-VMDvdDrive -VMName $VMName
+    If ($media -like 'Kali.iso' -or $media -like 'ubuntu.iso') {
+      $param = @{
+        VMName               = $VMName
+        FirstBootDevice      = $VMDvDDrive
+        EnableSecureBoot     = 'on'
+        SecureBootTemplate   = 'MicrosoftUEFICertificateAuthority'
+        PreferredNetworkBoot = 'IPv4'
+        Confirm              = $false
+      }
+      Set-VMFirmware @param
+    }
+    elseif ($media -notlike 'kali.iso' -or $media -notlike 'ubuntu.iso') {
+      $param = @{
+        VMName               = $VMName
+        FirstBootDevice      = $VMDvDDrive
+        EnableSecureBoot     = 'on'
+        SecureBootTemplate   = 'MicrosoftWindows'
+        PreferredNetworkBoot = 'IPv4'
+        Confirm              = $false
+      }
+      Set-VMFirmware @param
+    }
     $param = @{
       VMName               = $VMName
-      FirstBootDevice      = $VMDvDDrive
-      EnableSecureBoot     = 'on'
-      SecureBootTemplate   = 'MicrosoftUEFICertificateAuthority'
-      PreferredNetworkBoot = 'IPv4'
-      Confirm              = $false
+      DynamicMemory        = $true
+      MemoryMaximumBytes   = 8200MB
+      MemoryMinimumBytes   = 4100MB
+      MemoryStartUpBytes   = 4100MB
+      AutomaticStartAction = 'Nothing'
+      AutomaticStopAction  = 'Shutdown'
+      LockOnDisconnect     = 'on'
     }
-    Set-VMFirmware @param
-  }
-  elseif ($media -notlike 'kali.iso' -or $media -notlike 'ubuntu.iso') {
+    Set-VM @param
+    $param = @{
+      VMName                           = $VMName
+      Count                            = 2
+      Reserve                          = 50
+      RelativeWeight                   = 100
+      CompatibilityForMigrationEnabled = $true
+      Confirm                          = $false
+    }
+    Set-VMProcessor @param
+    $param = @{
+      VMName            = $VMName
+      DynamicMacAddress = $true
+      DeviceNaming      = 'on'
+      DhcpGuard         = 'on'
+      RouterGuard       = 'on'
+      VmmqEnabled       = $true
+      VrssEnabled       = $true
+      AllowTeaming      = 'on'
+    }
+    Set-VMNetworkAdapter @param
+    Enable-VMConsoleSupport -VMName $VMName
     $param = @{
       VMName               = $VMName
-      FirstBootDevice      = $VMDvDDrive
-      EnableSecureBoot     = 'off'
-      SecureBootTemplate   = 'MicrosoftWindows'
-      PreferredNetworkBoot = 'IPv4'
+      NewLocalKeyProtector = $true
       Confirm              = $false
     }
-    Set-VMFirmware @param
+    Set-VMKeyProtector @param
+    Enable-VMTPM -VMName $VMName
+    $param = @{
+      VMName                            = $VMName
+      EncryptStateAndVMMigrationTraffic = $true
+      VirtualizationBasedSecurityOptOut = $false
+      Confirm                           = $false
+    }
+    Set-VMSecurity @param
   }
-  $param = @{
-    VMName               = $VMName
-    DynamicMemory        = $true
-    MemoryMaximumBytes   = 8200MB
-    MemoryMinimumBytes   = 4100MB
-    MemoryStartUpBytes   = 4100MB
-    AutomaticStartAction = 'Nothing'
-    AutomaticStopAction  = 'Shutdown'
-    LockOnDisconnect     = 'on'
+  else {
+    Write-Host "Add -AddAdditionalConfigurations switch to add additional configurations"
   }
-  Set-VM @param
-  $param = @{
-    VMName                           = $VMName
-    Count                            = 2
-    Reserve                          = 50
-    RelativeWeight                   = 100
-    CompatibilityForMigrationEnabled = $true
-    Confirm                          = $false
-  }
-  Set-VMProcessor @param
-  $param = @{
-    VMName            = $VMName
-    DynamicMacAddress = $true
-    DeviceNaming      = 'on'
-    DhcpGuard         = 'on'
-    RouterGuard       = 'on'
-    VmmqEnabled       = $true
-    VrssEnabled       = $true
-    AllowTeaming      = 'on'
-  }
-  Set-VMNetworkAdapter @param
-  Enable-VMConsoleSupport -VMName $VMName
-  $param = @{
-    VMName               = $VMName
-    NewLocalKeyProtector = $true
-    Confirm              = $false
-  }
-  Set-VMKeyProtector @param
-  Enable-VMTPM -VMName $VMName
-  $param = @{
-    VMName                            = $VMName
-    EncryptStateAndVMMigrationTraffic = $true
-    VirtualizationBasedSecurityOptOut = $false
-    Confirm                           = $false
-  }
-  Set-VMSecurity @param
   if ($AddDCSetting.IsPresent) {
+    $param = @{
+      VMName               = $VMName
+      DynamicMemory        = $true
+      MemoryMaximumBytes   = 4100MB
+      MemoryMinimumBytes   = 2050MB
+      MemoryStartUpBytes   = 4100MB
+      AutomaticStartAction = 'start'
+      AutomaticStopAction  = 'Shutdown'
+      LockOnDisconnect     = 'on'
+    }
+    Set-VM @param
+    $param = @{
+      VMName                           = $VMName
+      Count                            = 2
+      Reserve                          = 50
+      RelativeWeight                   = 100
+      CompatibilityForMigrationEnabled = $true
+      Confirm                          = $false
+    }
+    Set-VMProcessor @param
     $childPath = @('log.vhdx', 'sysvol.vhdx', 'ntds.vhdx')
     foreach ($child in $childPath) {
       $parentPath = Join-Path -Path E:\Hyper-V\VirtualMachines\ -ChildPath $VMName
@@ -248,28 +278,26 @@ function set-VMConfigurationSettings {
         }
         Add-VMHardDiskDrive @param
       }
-      else {
-        Write-Output [system.DateTime]::Now.ToString("dd/MM/yyyy HH:MM")+"-[INFO] - No Domain Controller Settings added"
-        Write-Output [system.DateTime]::Now.ToString("dd/MM/yyyy HH:MM")+" -[INFO] - To add the Domain Controller Settings, please run the following command: Set-VMConfigurationSettings -VMName $VMName -AddDCSetting"
-      }
     }
   }
-  if ($AddConfigMgrSetting.IsPresent) {
+  elseif ($AddConfigMgrSetting.IsPresent) {
     $param = @{
-      VMName                       = $VMName
-      StaticMemory                 = $true
-      MemoryStartUpBytes           = 32800MB
-      AutomaticStartAction         = 'Start'
-      AutomaticStopAction          = 'Shutdown'
-      AutomaticStartDelay          = 90
-      AutomaticCriticalErrorAction = 'Pause'
-      LockOnDisconnect             = 'on'
+      VMName               = $VMName
+      StaticMemory         = $true
+      MemoryStartUpBytes   = 32800MB
+      AutomaticStartAction = 'start'
+      AutomaticStartDelay  = '120'
+      AutomaticStopAction  = 'Shutdown'
+      LockOnDisconnect     = 'on'
     }
     Set-VM @param
     $param = @{
       VMName                           = $VMName
       Count                            = 4
-      Reserve                          = 50
+      Reserve                          = 0
+      MaximumCountPerNumaSocket        = 2
+      MaximumCountPerNumaNode          = 2
+      HwThreadCountPerCore             = 1
       RelativeWeight                   = 100
       CompatibilityForMigrationEnabled = $true
       Confirm                          = $false
@@ -391,10 +419,6 @@ function set-VMConfigurationSettings {
           Confirm            = $false
         }
         Add-VMHardDiskDrive @param
-      }
-      else {
-        Write-Output [System.DateTime]::Now.ToString("dd/MM/yyyy HH:MM")+ " - [INFO] - No ConfigMgr Setting added to VMName: $VMName"
-        Write-Output  [System.DateTime]::Now.ToString("dd/MM/yyyy HH:MM")+" - [INFO] - To add the ConfigMgr Settings, please run the following command: Set-VMConfigurationSettings -VMName $VMName -AddConfigMgrSetting"
       }
     }
   }
