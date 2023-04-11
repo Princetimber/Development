@@ -46,7 +46,8 @@ Function New-VirtualMachine {
     [Parameter(Mandatory = $true, Position = 1, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)][ValidateNotNullOrEmpty()][string]$Path,
     [Parameter(Mandatory = $false, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 2)][ValidateSet('datacenter', 'internal')][string]$switchName = 'datacenter',
     [Parameter(Mandatory = $true, Position = 3, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)][ValidateSet("4GB", "8GB", "16GB", "32GB")][string]$MemoryStartupSize = "4GB",
-    [Parameter(Mandatory = $false, Position = 4, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)][ValidateSet("40GB", "80GB", "100GB", "120GB")][string]$newVHDSize = "40GB"
+    [Parameter(Mandatory = $false, Position = 4, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)][ValidateSet("40GB", "80GB", "100GB", "120GB")][string]$newVHDSize = "40GB",
+    [Parameter(Mandatory = $false, Position = 5, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)][switch]$Create
   )
   if ([string]::IsNullOrEmpty($Name)) {
     Write-Error "Name cannot be null or empty"
@@ -68,16 +69,21 @@ Function New-VirtualMachine {
   }
 
   $newVHDPath = Join-Path -Path ($Path.Replace("virtualMachines", "VirtualHardDisks")) -ChildPath $Name\"osdisk.vhdx"
-  $param = @{
-    name               = $Name
-    path               = $Path
-    memorystartupbytes = $MemoryStartupBytes
-    newvhdPath         = $newvhdpath
-    newvhdSizeBytes    = $newVHDSizeBytes
-    switchName         = $switchName
-    generation         = 2
+  If ($Create.IsPresent) {
+    $param = @{
+      name               = $Name
+      path               = $Path
+      memorystartupbytes = $MemoryStartupBytes
+      newvhdPath         = $newvhdpath
+      newvhdSizeBytes    = $newVHDSizeBytes
+      switchName         = $switchName
+      generation         = 2
+    }
+    New-VM @param
   }
-  New-VM @param
+  else {
+    Write-Host "Add -Create switch to create the VM"
+  }
 }
 function set-VMConfigurationSettings {
   [CmdletBinding()]
