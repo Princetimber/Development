@@ -168,316 +168,632 @@ Function New-VirtualMachine {
 
 }
 function set-VMConfigurationSettings {
-  [CmdletBinding()]
+  [CmdletBinding(DefaultParameterSetName = 'Configure', SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
   Param(
-    [Parameter(Mandatory = $true, Position = 0)][ValidateNotNullOrEmpty()][string]$VMName,
+    [Parameter(Mandatory = $true, Position = 0)][ValidateNotNullOrEmpty()][string]$Name,
     [Parameter(Mandatory = $false, Position = 1)][ValidateSet('ubuntu.iso', 'kali.iso', 'ws2k22.iso', 'w1121h2.iso')][string]$media = 'ubuntu.iso',
     [Parameter(Mandatory = $false, Position = 2)][ValidateNotNullOrEmpty()][string]$mediaBinaryLocation = 'E:\Media',
     [Parameter(Mandatory = $false, Position = 3)][string]$mediaPath = (Join-Path -Path $mediaBinaryLocation -ChildPath $media),
-    [Parameter(Mandatory = $false, Position = 4, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)][switch]$Configure,
-    [Parameter(Mandatory = $false, Position = 5)][switch]$AddDCSetting,
-    [Parameter(Mandatory = $false, Position = 6)][switch]$AddConfigMgrSetting
+    [Parameter(ParameterSetName = 'Configure', Mandatory = $false, Position = 4, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)][switch]$Configure,
+    [Parameter(ParameterSetName = 'AddDCSettings', Mandatory = $false, Position = 5)][switch]$AddDCSettings,
+    [Parameter(ParameterSetName = 'AddConfigMgrSetting', Mandatory = $false, Position = 6)][switch]$AddConfigMgrSettings,
+    [Parameter(Mandatory = $false, HelpMessage = "If specified, the function will not prompt for confirmation.")][switch]$Force
   )
-  if ([string]::IsNullOrEmpty($VMName)) {
+  if ([string]::IsNullOrEmpty($Name)) {
     Write-Error "VMName cannot be null or empty"
   }
   if ([string]::IsNullOrEmpty($mediaBinaryLocation)) {
     Write-Error "mediaBinaryLocation cannot be null or empty"
   }
-  if ($Configure.IsPresent) {
-    $param = @{
-      VMName             = $VMName
-      Path               = $mediaPath
-      ControllerNumber   = 0
-      ControllerLocation = 1
-      Confirm            = $false
-    }
-    Add-VMDvdDrive @param
-    $VMDvDDrive = Get-VMDvdDrive -VMName $VMName
-    If ($media -like 'Kali.iso' -or $media -like 'ubuntu.iso') {
-      $param = @{
-        VMName               = $VMName
-        FirstBootDevice      = $VMDvDDrive
-        EnableSecureBoot     = 'on'
-        SecureBootTemplate   = 'MicrosoftUEFICertificateAuthority'
-        PreferredNetworkBoot = 'IPv4'
-        Confirm              = $false
+  switch ($PSCmdlet.ParameterSetName) {
+    'Configure' {
+      if ($Force.IsPresent -or $PSCmdlet.ShouldProcess($Name, "Configure VM")) {
+
+        $param = @{
+          VMName             = $Name
+          Path               = $mediaPath
+          ControllerNumber   = 0
+          ControllerLocation = 1
+          Confirm            = $false
+        }
+        Add-VMDvdDrive @param
+        $VMDvDDrive = Get-VMDvdDrive -VMName $Name
+        If ($media.Equals('ubuntu.iso') -or $media.Equals('kali.iso')) {
+          $param = @{
+            VMName               = $Name
+            FirstBootDevice      = $VMDvDDrive
+            EnableSecureBoot     = 'on'
+            SecureBootTemplate   = 'MicrosoftUEFICertificateAuthority'
+            PreferredNetworkBoot = 'IPv4'
+            Confirm              = $false
+          }
+          Set-VMFirmware @param
+        } elseif ($media.Equals('W*.iso')) {
+          $param = @{
+            VMName               = $Name
+            FirstBootDevice      = $VMDvDDrive
+            EnableSecureBoot     = 'on'
+            SecureBootTemplate   = 'MicrosoftWindows'
+            PreferredNetworkBoot = 'IPv4'
+            Confirm              = $false
+          }
+          Set-VMFirmware @param
+        }
+        $param = @{
+          VMName               = $Name
+          DynamicMemory        = $true
+          MemoryMaximumBytes   = 8200MB
+          MemoryMinimumBytes   = 4100MB
+          MemoryStartUpBytes   = 4100MB
+          AutomaticStartAction = 'Nothing'
+          AutomaticStopAction  = 'Shutdown'
+          LockOnDisconnect     = 'on'
+        }
+        Set-VM @param
+        $param = @{
+          VMName                           = $Name
+          Count                            = 2
+          Reserve                          = 50
+          RelativeWeight                   = 100
+          CompatibilityForMigrationEnabled = $true
+          Confirm                          = $false
+        }
+        Set-VMProcessor @param
+        $param = @{
+          VMName            = $Name
+          DynamicMacAddress = $true
+          DeviceNaming      = 'on'
+          DhcpGuard         = 'on'
+          RouterGuard       = 'on'
+          VmmqEnabled       = $true
+          VrssEnabled       = $true
+          AllowTeaming      = 'on'
+        }
+        Set-VMNetworkAdapter @param
+        Enable-VMConsoleSupport -VMName $Name
+        $param = @{
+          VMName               = $Name
+          NewLocalKeyProtector = $true
+          Confirm              = $false
+        }
+        Set-VMKeyProtector @param
+        Enable-VMTPM -VMName $Name
+        $param = @{
+          VMName                            = $Name
+          EncryptStateAndVMMigrationTraffic = $true
+          VirtualizationBasedSecurityOptOut = $false
+          Confirm                           = $false
+        }
+        Set-VMSecurity @param
+      } elseif ($Force.IsPresent -and $PSCmdlet.ShouldContinue("Do you want to configure the VM?", "Configuring VM")) {
+
+        $param = @{
+          VMName             = $Name
+          Path               = $mediaPath
+          ControllerNumber   = 0
+          ControllerLocation = 1
+          Confirm            = $false
+        }
+        Add-VMDvdDrive @param
+        $VMDvDDrive = Get-VMDvdDrive -VMName $Name
+        If ($media.Equals('ubuntu.iso') -or $media.Equals('kali.iso')) {
+          $param = @{
+            VMName               = $Name
+            FirstBootDevice      = $VMDvDDrive
+            EnableSecureBoot     = 'on'
+            SecureBootTemplate   = 'MicrosoftUEFICertificateAuthority'
+            PreferredNetworkBoot = 'IPv4'
+            Confirm              = $false
+          }
+          Set-VMFirmware @param
+        } elseif ($media.Equals("win*.iso")) {
+          $param = @{
+            VMName               = $Name
+            FirstBootDevice      = $VMDvDDrive
+            EnableSecureBoot     = 'on'
+            SecureBootTemplate   = 'MicrosoftWindows'
+            PreferredNetworkBoot = 'IPv4'
+            Confirm              = $false
+          }
+          Set-VMFirmware @param
+        }
+        $param = @{
+          VMName               = $Name
+          DynamicMemory        = $true
+          MemoryMaximumBytes   = 8200MB
+          MemoryMinimumBytes   = 4100MB
+          MemoryStartUpBytes   = 4100MB
+          AutomaticStartAction = 'Nothing'
+          AutomaticStopAction  = 'Shutdown'
+          LockOnDisconnect     = 'on'
+        }
+        Set-VM @param
+        $param = @{
+          VMName                           = $Name
+          Count                            = 2
+          Reserve                          = 50
+          RelativeWeight                   = 100
+          CompatibilityForMigrationEnabled = $true
+          Confirm                          = $false
+        }
+        Set-VMProcessor @param
+        $param = @{
+          VMName            = $Name
+          DynamicMacAddress = $true
+          DeviceNaming      = 'on'
+          DhcpGuard         = 'on'
+          RouterGuard       = 'on'
+          VmmqEnabled       = $true
+          VrssEnabled       = $true
+          AllowTeaming      = 'on'
+        }
+        Set-VMNetworkAdapter @param
+        Enable-VMConsoleSupport -VMName $Name
+        $param = @{
+          VMName               = $Name
+          NewLocalKeyProtector = $true
+          Confirm              = $false
+        }
+        Set-VMKeyProtector @param
+        Enable-VMTPM -VMName $Name
+        $param = @{
+          VMName                            = $Name
+          EncryptStateAndVMMigrationTraffic = $true
+          VirtualizationBasedSecurityOptOut = $false
+          Confirm                           = $false
+        }
+        Set-VMSecurity @param
+      } else {
+        Write-Warning "Virtual machine $Name is not configured."
       }
-      Set-VMFirmware @param
-    } elseif ($media -notlike 'kali.iso' -or $media -notlike 'ubuntu.iso') {
-      $param = @{
-        VMName               = $VMName
-        FirstBootDevice      = $VMDvDDrive
-        EnableSecureBoot     = 'on'
-        SecureBootTemplate   = 'MicrosoftWindows'
-        PreferredNetworkBoot = 'IPv4'
-        Confirm              = $false
-      }
-      Set-VMFirmware @param
     }
-    $param = @{
-      VMName               = $VMName
-      DynamicMemory        = $true
-      MemoryMaximumBytes   = 8200MB
-      MemoryMinimumBytes   = 4100MB
-      MemoryStartUpBytes   = 4100MB
-      AutomaticStartAction = 'Nothing'
-      AutomaticStopAction  = 'Shutdown'
-      LockOnDisconnect     = 'on'
-    }
-    Set-VM @param
-    $param = @{
-      VMName                           = $VMName
-      Count                            = 2
-      Reserve                          = 50
-      RelativeWeight                   = 100
-      CompatibilityForMigrationEnabled = $true
-      Confirm                          = $false
-    }
-    Set-VMProcessor @param
-    $param = @{
-      VMName            = $VMName
-      DynamicMacAddress = $true
-      DeviceNaming      = 'on'
-      DhcpGuard         = 'on'
-      RouterGuard       = 'on'
-      VmmqEnabled       = $true
-      VrssEnabled       = $true
-      AllowTeaming      = 'on'
-    }
-    Set-VMNetworkAdapter @param
-    Enable-VMConsoleSupport -VMName $VMName
-    $param = @{
-      VMName               = $VMName
-      NewLocalKeyProtector = $true
-      Confirm              = $false
-    }
-    Set-VMKeyProtector @param
-    Enable-VMTPM -VMName $VMName
-    $param = @{
-      VMName                            = $VMName
-      EncryptStateAndVMMigrationTraffic = $true
-      VirtualizationBasedSecurityOptOut = $false
-      Confirm                           = $false
-    }
-    Set-VMSecurity @param
-  } else {
-    Write-Host "Add -AddAdditionalConfigurations switch to add additional configurations"
   }
-  if ($AddDCSetting.IsPresent) {
-    $param = @{
-      VMName               = $VMName
-      DynamicMemory        = $true
-      MemoryMaximumBytes   = 4100MB
-      MemoryMinimumBytes   = 2050MB
-      MemoryStartUpBytes   = 4100MB
-      AutomaticStartAction = 'start'
-      AutomaticStopAction  = 'Shutdown'
-      LockOnDisconnect     = 'on'
-    }
-    Set-VM @param
-    $param = @{
-      VMName                           = $VMName
-      Count                            = 2
-      Reserve                          = 50
-      RelativeWeight                   = 100
-      CompatibilityForMigrationEnabled = $true
-      Confirm                          = $false
-    }
-    Set-VMProcessor @param
-    $childPath = @('log.vhdx', 'sysvol.vhdx', 'ntds.vhdx')
-    foreach ($child in $childPath) {
-      $parentPath = Join-Path -Path E:\Hyper-V\VirtualMachines\ -ChildPath $VMName
-      if ($child -match 'log.vhdx') {
-        $path = Join-Path -Path $parentPath.Replace('virtualMachines', 'virtualHardDisks') -ChildPath "$child"
+  switch ($PSCmdlet.ParameterSetName) {
+    'AddDCSettings' {
+      If ($Force.IsPresent -or $PSCmdlet.ShouldProcess($Name, "Adding DC Settings")) {
         $param = @{
-          Path      = $path
-          SizeBytes = 20GB
-          Dynamic   = $false
-          Confirm   = $false
+          VMName               = $Name
+          DynamicMemory        = $true
+          MemoryMaximumBytes   = 4100MB
+          MemoryMinimumBytes   = 2050MB
+          MemoryStartUpBytes   = 4100MB
+          AutomaticStartAction = 'start'
+          AutomaticStopAction  = 'Shutdown'
+          LockOnDisconnect     = 'on'
         }
-        New-VHD @param
+        Set-VM @param
         $param = @{
-          VMName             = $VMName
-          Path               = $path
-          ControllerType     = 'scsi'
-          ControllerNumber   = 0
-          ControllerLocation = 2
-          Confirm            = $false
+          VMName                           = $Name
+          Count                            = 2
+          Reserve                          = 50
+          RelativeWeight                   = 100
+          CompatibilityForMigrationEnabled = $true
+          Confirm                          = $false
         }
-        Add-VMHardDiskDrive @param
-      } elseif ($child -match 'sysvol.vhdx') {
-        $path = Join-Path -Path $parentPath.Replace('virtualMachines', 'virtualHardDisks') -ChildPath "$child"
-        $param = @{
-          Path      = $path
-          SizeBytes = 20GB
-          Dynamic   = $false
-          Confirm   = $false
+        Set-VMProcessor @param
+        $childPath = @('log.vhdx', 'sysvol.vhdx', 'ntds.vhdx')
+        foreach ($child in $childPath) {
+          $parentPath = Join-Path -Path E:\Hyper-V\VirtualMachines\ -ChildPath $Name
+          if ($child -match 'log.vhdx') {
+            $path = Join-Path -Path $parentPath.Replace('virtualMachines', 'virtualHardDisks') -ChildPath "$child"
+            $param = @{
+              Path      = $path
+              SizeBytes = 20GB
+              Dynamic   = $false
+              Confirm   = $false
+            }
+            New-VHD @param
+            $param = @{
+              VMName             = $Name
+              Path               = $path
+              ControllerType     = 'scsi'
+              ControllerNumber   = 0
+              ControllerLocation = 2
+              Confirm            = $false
+            }
+            Add-VMHardDiskDrive @param
+          } elseif ($child -match 'sysvol.vhdx') {
+            $path = Join-Path -Path $parentPath.Replace('virtualMachines', 'virtualHardDisks') -ChildPath "$child"
+            $param = @{
+              Path      = $path
+              SizeBytes = 20GB
+              Dynamic   = $false
+              Confirm   = $false
+            }
+            New-VHD @param
+            $param = @{
+              VMName             = $Name
+              Path               = $path
+              ControllerType     = 'scsi'
+              ControllerNumber   = 0
+              ControllerLocation = 3
+              Confirm            = $false
+            }
+            Add-VMHardDiskDrive @param
+          } elseif ($child -match 'ntds.vhdx') {
+            $path = Join-Path -Path $parentPath.Replace('virtualMachines', 'virtualHardDisks') -ChildPath "$child"
+            $param = @{
+              Path      = $path
+              SizeBytes = 20GB
+              Dynamic   = $false
+              Confirm   = $false
+            }
+            New-VHD @param
+            $param = @{
+              VMName             = $Name
+              Path               = $path
+              ControllerType     = 'scsi'
+              ControllerNumber   = 0
+              ControllerLocation = 4
+              Confirm            = $false
+            }
+            Add-VMHardDiskDrive @param
+          }
         }
-        New-VHD @param
-        $param = @{
-          VMName             = $VMName
-          Path               = $path
-          ControllerType     = 'scsi'
-          ControllerNumber   = 0
-          ControllerLocation = 3
-          Confirm            = $false
-        }
-        Add-VMHardDiskDrive @param
-      } elseif ($child -match 'ntds.vhdx') {
-        $path = Join-Path -Path $parentPath.Replace('virtualMachines', 'virtualHardDisks') -ChildPath "$child"
-        $param = @{
-          Path      = $path
-          SizeBytes = 20GB
-          Dynamic   = $false
-          Confirm   = $false
-        }
-        New-VHD @param
-        $param = @{
-          VMName             = $VMName
-          Path               = $path
-          ControllerType     = 'scsi'
-          ControllerNumber   = 0
-          ControllerLocation = 4
-          Confirm            = $false
-        }
-        Add-VMHardDiskDrive @param
       }
+      elseIf ($Force.IsPresent -and $PSCmdlet.ShouldContinue("Vitual machine $Name is not configured, do you want configure?", "Adding DC Settings")) {
+        $param = @{
+          VMName               = $Name
+          DynamicMemory        = $true
+          MemoryMaximumBytes   = 4100MB
+          MemoryMinimumBytes   = 2050MB
+          MemoryStartUpBytes   = 4100MB
+          AutomaticStartAction = 'start'
+          AutomaticStopAction  = 'Shutdown'
+          LockOnDisconnect     = 'on'
+        }
+        Set-VM @param
+        $param = @{
+          VMName                           = $Name
+          Count                            = 2
+          Reserve                          = 50
+          RelativeWeight                   = 100
+          CompatibilityForMigrationEnabled = $true
+          Confirm                          = $false
+        }
+        Set-VMProcessor @param
+        $childPath = @('log.vhdx', 'sysvol.vhdx', 'ntds.vhdx')
+        foreach ($child in $childPath) {
+          $parentPath = Join-Path -Path E:\Hyper-V\VirtualMachines\ -ChildPath $Name
+          if ($child -match 'log.vhdx') {
+            $path = Join-Path -Path $parentPath.Replace('virtualMachines', 'virtualHardDisks') -ChildPath "$child"
+            $param = @{
+              Path      = $path
+              SizeBytes = 20GB
+              Dynamic   = $false
+              Confirm   = $false
+            }
+            New-VHD @param
+            $param = @{
+              VMName             = $Name
+              Path               = $path
+              ControllerType     = 'scsi'
+              ControllerNumber   = 0
+              ControllerLocation = 2
+              Confirm            = $false
+            }
+            Add-VMHardDiskDrive @param
+          } elseif ($child -match 'sysvol.vhdx') {
+            $path = Join-Path -Path $parentPath.Replace('virtualMachines', 'virtualHardDisks') -ChildPath "$child"
+            $param = @{
+              Path      = $path
+              SizeBytes = 20GB
+              Dynamic   = $false
+              Confirm   = $false
+            }
+            New-VHD @param
+            $param = @{
+              VMName             = $Name
+              Path               = $path
+              ControllerType     = 'scsi'
+              ControllerNumber   = 0
+              ControllerLocation = 3
+              Confirm            = $false
+            }
+            Add-VMHardDiskDrive @param
+          } elseif ($child -match 'ntds.vhdx') {
+            $path = Join-Path -Path $parentPath.Replace('virtualMachines', 'virtualHardDisks') -ChildPath "$child"
+            $param = @{
+              Path      = $path
+              SizeBytes = 20GB
+              Dynamic   = $false
+              Confirm   = $false
+            }
+            New-VHD @param
+            $param = @{
+              VMName             = $Name
+              Path               = $path
+              ControllerType     = 'scsi'
+              ControllerNumber   = 0
+              ControllerLocation = 4
+              Confirm            = $false
+            }
+            Add-VMHardDiskDrive @param
+          }
+        }
+      }
+      else{
+        Write-Warning "Virtual machine $Name is not configured"}
     }
-  } elseif ($AddConfigMgrSetting.IsPresent) {
-    $param = @{
-      VMName               = $VMName
-      StaticMemory         = $true
-      MemoryStartUpBytes   = 32800MB
-      AutomaticStartAction = 'start'
-      AutomaticStartDelay  = '120'
-      AutomaticStopAction  = 'Shutdown'
-      LockOnDisconnect     = 'on'
-    }
-    Set-VM @param
-    $param = @{
-      VMName                           = $VMName
-      Count                            = 4
-      Reserve                          = 0
-      MaximumCountPerNumaSocket        = 2
-      MaximumCountPerNumaNode          = 2
-      HwThreadCountPerCore             = 1
-      RelativeWeight                   = 100
-      CompatibilityForMigrationEnabled = $true
-      Confirm                          = $false
-    }
-    Set-VMProcessor @param
-    $childPath = @('logs.vhdx', 'mdf.vhdx', 'ldf.vhdx', 'contentLibrary.vhdx', 'temp.vhdx', 'ConfigMgrInstall.vhdx')
-    foreach ($child in $childPath) {
-      $parentPath = Join-Path -Path E:\Hyper-V\VirtualMachines\ -ChildPath $VMName
-      if ($child -match 'logs.vhdx') {
-        $path = Join-Path -Path $parentPath.Replace('virtualMachines', 'virtualHardDisks') -ChildPath "$child"
+  }
+  switch ($PSCmdlet.ParameterSetName) {
+    'AddConfigMgrSettings' {
+      If ($Force.IsPresent -or $PSCmdlet.ShouldProcess($Name, "Adding ConfigMgr Settings")) {
         $param = @{
-          Path      = $path
-          SizeBytes = 50GB
-          Dynamic   = $false
-          Confirm   = $false
+          VMName               = $Name
+          StaticMemory         = $true
+          MemoryStartUpBytes   = 32800MB
+          AutomaticStartAction = 'start'
+          AutomaticStartDelay  = '120'
+          AutomaticStopAction  = 'Shutdown'
+          LockOnDisconnect     = 'on'
         }
-        New-VHD @param
+        Set-VM @param
         $param = @{
-          VMName             = $VMName
-          Path               = $path
-          ControllerType     = 'scsi'
-          ControllerNumber   = 0
-          ControllerLocation = 2
-          Confirm            = $false
+          VMName                           = $Name
+          Count                            = 4
+          Reserve                          = 0
+          MaximumCountPerNumaSocket        = 2
+          MaximumCountPerNumaNode          = 2
+          HwThreadCountPerCore             = 1
+          RelativeWeight                   = 100
+          CompatibilityForMigrationEnabled = $true
+          Confirm                          = $false
         }
-        Add-VMHardDiskDrive @param
-      } elseif ($child -match 'mdf.vhdx') {
-        $path = Join-Path -Path $parentPath.Replace('virtualMachines', 'virtualHardDisks') -ChildPath "$child"
+        Set-VMProcessor @param
+        $childPath = @('logs.vhdx', 'mdf.vhdx', 'ldf.vhdx', 'contentLibrary.vhdx', 'temp.vhdx', 'ConfigMgrInstall.vhdx')
+        foreach ($child in $childPath) {
+          $parentPath = Join-Path -Path E:\Hyper-V\VirtualMachines\ -ChildPath $Name
+          if ($child -match 'logs.vhdx') {
+            $path = Join-Path -Path $parentPath.Replace('virtualMachines', 'virtualHardDisks') -ChildPath "$child"
+            $param = @{
+              Path      = $path
+              SizeBytes = 50GB
+              Dynamic   = $false
+              Confirm   = $false
+            }
+            New-VHD @param
+            $param = @{
+              VMName             = $Name
+              Path               = $path
+              ControllerType     = 'scsi'
+              ControllerNumber   = 0
+              ControllerLocation = 2
+              Confirm            = $false
+            }
+            Add-VMHardDiskDrive @param
+          } elseif ($child -match 'mdf.vhdx') {
+            $path = Join-Path -Path $parentPath.Replace('virtualMachines', 'virtualHardDisks') -ChildPath "$child"
+            $param = @{
+              Path      = $path
+              SizeBytes = 75GB
+              Dynamic   = $false
+              Confirm   = $false
+            }
+            New-VHD @param
+            $param = @{
+              VMName             = $Name
+              Path               = $path
+              ControllerType     = 'scsi'
+              ControllerNumber   = 0
+              ControllerLocation = 3
+              Confirm            = $false
+            }
+            Add-VMHardDiskDrive @param
+          } elseif ($child -match 'ldf.vhdx') {
+            $path = Join-Path -Path $parentPath.Replace('virtualMachines', 'virtualHardDisks') -ChildPath "$child"
+            $param = @{
+              Path      = $path
+              SizeBytes = 75GB
+              Dynamic   = $false
+              Confirm   = $false
+            }
+            New-VHD @param
+            $param = @{
+              VMName             = $Name
+              Path               = $path
+              ControllerType     = 'scsi'
+              ControllerNumber   = 0
+              ControllerLocation = 4
+              Confirm            = $false
+            }
+            Add-VMHardDiskDrive @param
+          } elseif ($child -match 'contentlibrary.vhdx') {
+            $path = Join-Path -Path $parentPath.Replace('virtualMachines', 'virtualHardDisks') -ChildPath "$child"
+            $param = @{
+              Path      = $path
+              SizeBytes = 500GB
+              Dynamic   = $true
+              Confirm   = $false
+            }
+            New-VHD @param
+            $param = @{
+              VMName             = $Name
+              Path               = $path
+              ControllerType     = 'scsi'
+              ControllerNumber   = 0
+              ControllerLocation = 5
+              Confirm            = $false
+            }
+            Add-VMHardDiskDrive @param
+          } elseif ($child -match 'temp.vhdx') {
+            $path = Join-Path -Path $parentPath.Replace('virtualMachines', 'virtualHardDisks') -ChildPath "$child"
+            $param = @{
+              Path      = $path
+              SizeBytes = 500GB
+              Dynamic   = $true
+              Confirm   = $false
+            }
+            New-VHD @param
+            $param = @{
+              VMName             = $Name
+              Path               = $path
+              ControllerType     = 'scsi'
+              ControllerNumber   = 0
+              ControllerLocation = 6
+              Confirm            = $false
+            }
+            Add-VMHardDiskDrive @param
+          } elseif ($child -match 'ConfigMgrInstall.vhdx') {
+            $path = Join-Path -Path $parentPath.Replace('virtualMachines', 'virtualHardDisks') -ChildPath "$child"
+            $param = @{
+              Path      = $path
+              SizeBytes = 150GB
+              Dynamic   = $false
+              Confirm   = $false
+            }
+            New-VHD @param
+            $param = @{
+              VMName             = $Name
+              Path               = $path
+              ControllerType     = 'scsi'
+              ControllerNumber   = 0
+              ControllerLocation = 7
+              Confirm            = $false
+            }
+            Add-VMHardDiskDrive @param
+          }
+        }
+      }
+      elseIf ($Force.IsPresent -or $PSCmdlet.ShouldContinue("Virtual machine $Name is not configured, do you want configure?", "Adding ConfigMgr Settings")) {
         $param = @{
-          Path      = $path
-          SizeBytes = 75GB
-          Dynamic   = $false
-          Confirm   = $false
+          VMName               = $Name
+          StaticMemory         = $true
+          MemoryStartUpBytes   = 32800MB
+          AutomaticStartAction = 'start'
+          AutomaticStartDelay  = '120'
+          AutomaticStopAction  = 'Shutdown'
+          LockOnDisconnect     = 'on'
         }
-        New-VHD @param
+        Set-VM @param
         $param = @{
-          VMName             = $VMName
-          Path               = $path
-          ControllerType     = 'scsi'
-          ControllerNumber   = 0
-          ControllerLocation = 3
-          Confirm            = $false
+          VMName                           = $Name
+          Count                            = 4
+          Reserve                          = 0
+          MaximumCountPerNumaSocket        = 2
+          MaximumCountPerNumaNode          = 2
+          HwThreadCountPerCore             = 1
+          RelativeWeight                   = 100
+          CompatibilityForMigrationEnabled = $true
+          Confirm                          = $false
         }
-        Add-VMHardDiskDrive @param
-      } elseif ($child -match 'ldf.vhdx') {
-        $path = Join-Path -Path $parentPath.Replace('virtualMachines', 'virtualHardDisks') -ChildPath "$child"
-        $param = @{
-          Path      = $path
-          SizeBytes = 75GB
-          Dynamic   = $false
-          Confirm   = $false
+        Set-VMProcessor @param
+        $childPath = @('logs.vhdx', 'mdf.vhdx', 'ldf.vhdx', 'contentLibrary.vhdx', 'temp.vhdx', 'ConfigMgrInstall.vhdx')
+        foreach ($child in $childPath) {
+          $parentPath = Join-Path -Path E:\Hyper-V\VirtualMachines\ -ChildPath $Name
+          if ($child -match 'logs.vhdx') {
+            $path = Join-Path -Path $parentPath.Replace('virtualMachines', 'virtualHardDisks') -ChildPath "$child"
+            $param = @{
+              Path      = $path
+              SizeBytes = 50GB
+              Dynamic   = $false
+              Confirm   = $false
+            }
+            New-VHD @param
+            $param = @{
+              VMName             = $Name
+              Path               = $path
+              ControllerType     = 'scsi'
+              ControllerNumber   = 0
+              ControllerLocation = 2
+              Confirm            = $false
+            }
+            Add-VMHardDiskDrive @param
+          } elseif ($child -match 'mdf.vhdx') {
+            $path = Join-Path -Path $parentPath.Replace('virtualMachines', 'virtualHardDisks') -ChildPath "$child"
+            $param = @{
+              Path      = $path
+              SizeBytes = 75GB
+              Dynamic   = $false
+              Confirm   = $false
+            }
+            New-VHD @param
+            $param = @{
+              VMName             = $Name
+              Path               = $path
+              ControllerType     = 'scsi'
+              ControllerNumber   = 0
+              ControllerLocation = 3
+              Confirm            = $false
+            }
+            Add-VMHardDiskDrive @param
+          } elseif ($child -match 'ldf.vhdx') {
+            $path = Join-Path -Path $parentPath.Replace('virtualMachines', 'virtualHardDisks') -ChildPath "$child"
+            $param = @{
+              Path      = $path
+              SizeBytes = 75GB
+              Dynamic   = $false
+              Confirm   = $false
+            }
+            New-VHD @param
+            $param = @{
+              VMName             = $Name
+              Path               = $path
+              ControllerType     = 'scsi'
+              ControllerNumber   = 0
+              ControllerLocation = 4
+              Confirm            = $false
+            }
+            Add-VMHardDiskDrive @param
+          } elseif ($child -match 'contentlibrary.vhdx') {
+            $path = Join-Path -Path $parentPath.Replace('virtualMachines', 'virtualHardDisks') -ChildPath "$child"
+            $param = @{
+              Path      = $path
+              SizeBytes = 500GB
+              Dynamic   = $true
+              Confirm   = $false
+            }
+            New-VHD @param
+            $param = @{
+              VMName             = $Name
+              Path               = $path
+              ControllerType     = 'scsi'
+              ControllerNumber   = 0
+              ControllerLocation = 5
+              Confirm            = $false
+            }
+            Add-VMHardDiskDrive @param
+          } elseif ($child -match 'temp.vhdx') {
+            $path = Join-Path -Path $parentPath.Replace('virtualMachines', 'virtualHardDisks') -ChildPath "$child"
+            $param = @{
+              Path      = $path
+              SizeBytes = 500GB
+              Dynamic   = $true
+              Confirm   = $false
+            }
+            New-VHD @param
+            $param = @{
+              VMName             = $Name
+              Path               = $path
+              ControllerType     = 'scsi'
+              ControllerNumber   = 0
+              ControllerLocation = 6
+              Confirm            = $false
+            }
+            Add-VMHardDiskDrive @param
+          } elseif ($child -match 'ConfigMgrInstall.vhdx') {
+            $path = Join-Path -Path $parentPath.Replace('virtualMachines', 'virtualHardDisks') -ChildPath "$child"
+            $param = @{
+              Path      = $path
+              SizeBytes = 150GB
+              Dynamic   = $false
+              Confirm   = $false
+            }
+            New-VHD @param
+            $param = @{
+              VMName             = $Name
+              Path               = $path
+              ControllerType     = 'scsi'
+              ControllerNumber   = 0
+              ControllerLocation = 7
+              Confirm            = $false
+            }
+            Add-VMHardDiskDrive @param
+          }
         }
-        New-VHD @param
-        $param = @{
-          VMName             = $VMName
-          Path               = $path
-          ControllerType     = 'scsi'
-          ControllerNumber   = 0
-          ControllerLocation = 4
-          Confirm            = $false
-        }
-        Add-VMHardDiskDrive @param
-      } elseif ($child -match 'contentlibrary.vhdx') {
-        $path = Join-Path -Path $parentPath.Replace('virtualMachines', 'virtualHardDisks') -ChildPath "$child"
-        $param = @{
-          Path      = $path
-          SizeBytes = 500GB
-          Dynamic   = $true
-          Confirm   = $false
-        }
-        New-VHD @param
-        $param = @{
-          VMName             = $VMName
-          Path               = $path
-          ControllerType     = 'scsi'
-          ControllerNumber   = 0
-          ControllerLocation = 5
-          Confirm            = $false
-        }
-        Add-VMHardDiskDrive @param
-      } elseif ($child -match 'temp.vhdx') {
-        $path = Join-Path -Path $parentPath.Replace('virtualMachines', 'virtualHardDisks') -ChildPath "$child"
-        $param = @{
-          Path      = $path
-          SizeBytes = 500GB
-          Dynamic   = $true
-          Confirm   = $false
-        }
-        New-VHD @param
-        $param = @{
-          VMName             = $VMName
-          Path               = $path
-          ControllerType     = 'scsi'
-          ControllerNumber   = 0
-          ControllerLocation = 6
-          Confirm            = $false
-        }
-        Add-VMHardDiskDrive @param
-      } elseif ($child -match 'ConfigMgrInstall.vhdx') {
-        $path = Join-Path -Path $parentPath.Replace('virtualMachines', 'virtualHardDisks') -ChildPath "$child"
-        $param = @{
-          Path      = $path
-          SizeBytes = 150GB
-          Dynamic   = $false
-          Confirm   = $false
-        }
-        New-VHD @param
-        $param = @{
-          VMName             = $VMName
-          Path               = $path
-          ControllerType     = 'scsi'
-          ControllerNumber   = 0
-          ControllerLocation = 7
-          Confirm            = $false
-        }
-        Add-VMHardDiskDrive @param
+      }
+      else {
+        Write-Warning "Virtual machine $Name is not configured."
       }
     }
   }
