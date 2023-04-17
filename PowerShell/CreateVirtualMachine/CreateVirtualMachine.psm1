@@ -801,18 +801,24 @@ function set-VMConfigurationSettings {
 function Remove-VirtualMachine {
   [CmdletBinding(DefaultParameterSetName = 'Remove', PositionalBinding = $true, ConfirmImpact = 'High', SupportsShouldProcess = $true)]
   param(
-    [Parameter(Mandatory = $true, Position = 0, HelpMessage = "VM name to remove.")][ValidateNotNullOrEmpty()][ValidateScript({
+    [Parameter(Mandatory = $true, Position = 0, HelpMessage = "VM name to remove.", ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, ValueFromRemainingArguments = $true)][ValidateNotNullOrEmpty()][ValidateScript({
         If (!(Get-VM -Name $_ -ErrorAction SilentlyContinue)) {
           throw "The virtual machine with the name $Name does not exist."
         }
         $true
       })][string]$Name,
-    [Parameter(Mandatory = $true, Position = 1, HelpMessage = "Path to the virtual machine.")][ValidateNotNullOrEmpty()][ValidateScript({
+    [Parameter(Mandatory = $false, Position = 1, HelpMessage = "Path to the virtual machine.")][ValidateNotNullOrEmpty()][ValidateScript({
         If (!(Test-Path -Path $_ -PathType Container -ErrorAction SilentlyContinue)) {
           throw "The path container $Path does not exist."
         }
         $true
       })][string]$Path,
+    [Parameter(Mandatory = $False, Position = 2, HelpMessage = "Path to VM disks.")][ValidateNotNullOrEmpty()][ValidateScript({
+        If (!(Test-Path -Path $_ -PathType Container -ErrorAction SilentlyContinue)) {
+          throw "The path container $Path does not exist."
+        }
+        $true
+      })][string]$DiskPath = (Join-Path -Path(Join-Path -Path(Split-Path -Path $Path)-ChildPath "VirtualHardDisks" ) -ChildPath $Name),
     [Parameter(ParameterSetName = 'Remove', Mandatory = $true, Position = 2, HelpMessage = "Required to remove VM.")][switch]$Remove,
     [Parameter(Mandatory = $false, HelpMessage = "If specified, the function will not prompt for confirmation.")][switch]$Force
   )
@@ -822,22 +828,23 @@ function Remove-VirtualMachine {
   if ([string]::IsNullOrEmpty($Path)) {
     throw "The parameter Path is required, and cannot be null or empty."
   }
-  $VHDPath = Join-Path -Path (Split-Path -Path $Path) -ChildPath "VirtualHardDisks"
-  $ExisitngVHDPath = Join-Path -Path $VHDPath -ChildPath $Name
+  $DiskPath = Join-Path -Path(Join-Path -Path(Split-Path -Path $Path)-ChildPath "VirtualHardDisks" ) -ChildPath $Name
+  $State = (Get-VM -Name $Name).State
   switch ($PSCmdlet.ParameterSetName) {
     'Remove' {
       if ($Force.IsPresent -or $PSCmdlet.ShouldProcess($Name, "Remove virtual machine")) {
-        if ((Get-VM -Name $Name | Where-Object { $_.State -eq 'Running' })) {
+        if ($State) {
           Stop-VM -Name $Name -Force -TurnOff
           Remove-VM -Name $Name -Force
-          Remove-Item -Path $Path -Force -Recurse
-          Remove-Item -Path $ExisitngVHDPath -Force -Recurse
+          Remove-Item -Path $DiskPath -Force -Recurse
+          Remove-Item -Path(Join-Path -Path $Path -ChildPath $Name) -Force -Recurse
+
         }
       } elseif ($Force.IsPresent -and $PSCmdlet.ShouldContinue("Do you want to remove the virtual machine $Name?", "Remove virtual machine")) {
-        if ((Get-VM -Name $Name | Where-Object { $_.State -eq 'Off' })) {
+        if (!$State) {
           Remove-VM -Name $Name -Force
-          Remove-Item -Path $Path -Force -Recurse
-          Remove-Item -Path $ExisitngVHDPath -Force -Recurse
+          Remove-Item -Path $DiskPath -Force -Recurse
+          Remove-Item -Path(Join-Path -Path $Path -ChildPath $Name) -Force -Recurse
         }
       } else {
         Write-Warning "The virtual machine $Name was not removed."
