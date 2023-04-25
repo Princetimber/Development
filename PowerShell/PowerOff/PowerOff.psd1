@@ -72,7 +72,7 @@ NestedModules = @('PowerOff.psm1')
 FunctionsToExport = 'Stop-VirtualMachine'
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
-CmdletsToExport = '*'
+CmdletsToExport = 'Stop-VirtualMachine','Get-VM'
 
 # Variables to export from this module
 VariablesToExport = '*'
@@ -95,7 +95,7 @@ PrivateData = @{
     PSData = @{
 
         # Tags applied to this module. These help with module discovery in online galleries.
-        Tags = 'PowerOff', 'VM', 'VirtualMachine', 'Stop', 'Shutdown', 'PowerOff', 
+        Tags = 'PowerOff', 'VM', 'VirtualMachine', 'Stop', 'Shutdown', 'PowerOff',
                'PowerOffVM', 'PowerOffVirtualMachine'
 
         # A URL to the license for this module.
@@ -130,4 +130,3 @@ PrivateData = @{
 DefaultCommandPrefix = 'PowerOff'
 
 }
-
