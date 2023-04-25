@@ -23,11 +23,11 @@
 Function New-Password{
   [cmdletbinding()]
   Param(
-    [Parameter(Mandatory = $true, Position = 0, HelpMessage = "Password length", ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)][ValidateRange(8, 30)][int]$PasswordLength,
+    [Parameter(Mandatory = $true, Position = 0, HelpMessage = "Password length", ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)][ValidateRange(8, 40)][int]$PasswordLength,
     [Parameter(Mandatory = $false, Position = 1, HelpMessage = "Convert to Secure string", ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)][switch]$ConvertToSecureString
   )
   # Validate password length
-  if ($PasswordLength -lt 8 -or $PasswordLength -gt 30) {
+  if (($PasswordLength -lt 8) -or ($PasswordLength -gt 40)) {
     throw "Password length must be between 8 and 30"
   }
   # Generate password
