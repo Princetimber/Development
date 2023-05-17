@@ -29,7 +29,8 @@ function Stop-VirtualMachine {
     [Parameter(Mandatory = $false, Position = 3, HelpMessage = "Enter the name of the VM to be stopped.")][ValidateScript({
         If (Get-VM -Name $_ -ErrorAction SilentlyContinue) {
           $true
-        } else {
+        }
+        else {
           throw "The virtual machine with the name $Name does not exist."
         }
       })][string]$Name,
@@ -47,11 +48,13 @@ function Stop-VirtualMachine {
         if ((Get-VM -Name $Name).State -eq 'Running') {
           Get-VM -Name $Name | Stop-VM -Force | Out-Null
         }
-      } elseif ($Force.IsPresent -or $PSCmdlet.ShouldProcess($Name, "Stop Virtual Machine")) {
+      }
+      elseif ($Force.IsPresent -or $PSCmdlet.ShouldProcess($Name, "Stop Virtual Machine")) {
         if ((Get-VM -Name $Name).State -eq 'Running') {
           Get-VM -Name $Name | Stop-VM | Out-Null
         }
-      } else {
+      }
+      else {
         Write-Warning "Virtual Machine $Name is not stopped."
       }
 
@@ -61,11 +64,13 @@ function Stop-VirtualMachine {
         if ((Get-VM).State -eq 'Running') {
           Get-VM | Where-Object { $_.State -eq 'Running' } | Stop-VM -Force | Out-Null
         }
-      } elseif ($Force.IsPresent -or $PSCmdlet.ShouldProcess($VM, "Stop Virtual Machines")) {
+      }
+      elseif ($Force.IsPresent -or $PSCmdlet.ShouldProcess($VM, "Stop Virtual Machines")) {
         if ((Get-VM).State -eq 'Running') {
           Get-VM | Where-Object { $_.State -eq 'Running' } | Stop-VM -Force | Out-Null
         }
-      } else {
+      }
+      else {
         Write-Warning "The virtual machine $VM is running."
       }
     }
@@ -78,7 +83,8 @@ function Stop-VirtualMachine {
         if ((Get-VM).State -eq 'Off') {
           Stop-Computer -Force
         }
-      } elseIf ($Force.IsPresent -and $PSCmdlet.ShouldContinue("Are you sure you want to stop all running virtual machines and the host?", "Confirm Stop Virtual Machines and Host")) {
+      }
+      elseIf ($Force.IsPresent -and $PSCmdlet.ShouldContinue("Are you sure you want to stop all running virtual machines and the host?", "Confirm Stop Virtual Machines and Host")) {
         if ((Get-VM).State -ne 'Off') {
           Get-VM | Where-Object { $_.State -eq 'Running' } | Stop-VM -Force | Out-Null
           Stop-Computer -Force
@@ -86,7 +92,8 @@ function Stop-VirtualMachine {
         if ((Get-VM).State -eq 'Off') {
           Stop-Computer -Force
         }
-      } else {
+      }
+      else {
         Write-Warning "The virtual machine $VM is running and the VMHost $env:COMPUTERNAME is also running."
         return
       }
