@@ -20,7 +20,7 @@
   Generate-Password -PasswordLength 8
   This will generate a random password with a length of 8.
 #>
-Function New-Password{
+Function New-Password {
   [cmdletbinding()]
   Param(
     [Parameter(Mandatory = $true, Position = 0, HelpMessage = "Password length", ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)][ValidateRange(8, 40)][int]$PasswordLength,
