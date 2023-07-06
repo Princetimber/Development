@@ -1,20 +1,20 @@
 {
   "folders": [
     {
-      "path": ".\\Bicep",
+      "path": ".\\Documents\\development\\Bicep",
       "name": "Azure Bicep"
     },
     {
       "name": "Azure Cli",
-      "path": ".\\AzureCli"
+      "path": ".\\Documents\\development\\AzureCli"
     },
     {
       "name": "Terraform",
-      "path": ".\\Terraform"
+      "path": ".\\Documents\\development\\Terraform"
     },
     {
       "name": "Windows PowerShell",
-      "path": ".\\PowerShell"
+      "path": ".\\Documents\\development\\PowerShell"
     }
   ],
   "settings": {
@@ -119,16 +119,13 @@
   "stylelint.enable": true,
   "github.copilot.enable": {
     "*": true,
-    "yaml": false,
     "plaintext": false,
-    "markdown": false
+    "markdown": false,
+    "scminput": false
   },
+  "github.copilot.editor.enableCodeActions": true,
+  "github.copilot.editor.enableAutoCompletions": true,
   "github.copilot.inlineSuggest.enable": true,
-  "github.copilot.advanced": {
-    "enable": true,
-    "enableInlineSuggest": true,
-    "enableInlineSuggestForAllLanguages": true
-  }
 },
 "extensions": {
   "recommendations": [
@@ -180,9 +177,6 @@
     "njpwerner.autodocstring",
     "tushortz.python-extended-snippets",
     "stansw.vscode-odata",
-    "Equinusocio.vsc-community-material-theme",
-    "Equinusocio.vsc-material-theme","ChakrounAnas.turbo-console-log",
-    "equinusocio.vsc-material-theme-icons",
     "mechatroner.rainbow-csv",
     "vscodevim.vim",
     "DotJoshJohnson.xml",
