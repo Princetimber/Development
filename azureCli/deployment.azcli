@@ -1,3 +1,7 @@
 az deployment sub create --name deployrg --location uksouth --template-file C:\development\Bicep\rg\main.bicep
 az deployment group create --name nsgdeploy -g azuksengnr-rg --template-file C:\development\Bicep\resource\secmain.bicep
 az group list  --query "[location == uksouth]"
+
+az group delete -n azuksengnr-rg --yes
+az group delete -n deployrg --yes
+az vm list -g azuksengineeringrg --query "[].{name:name, location:location, rg:resourceGroup}" -o jsonc
