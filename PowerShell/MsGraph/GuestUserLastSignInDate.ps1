@@ -27,7 +27,7 @@
 Function Get-MgGuestUserLastSignInDate {
   [CmdletBinding(PositionalBinding = $false, DefaultParameterSetName = 'All')]
   Param (
-    [Parameter(Mandatory = $true)][Int64]$InactiveDays,
+    [Parameter(Mandatory = $true)][Int]$InactiveDays,
     [Parameter(Mandatory = $true)][String]$Path,
     [Parameter(Mandatory = $true, ParameterSetName = 'All')][Switch]$All
   )
@@ -36,7 +36,7 @@ Function Get-MgGuestUserLastSignInDate {
 
   # get all guest users using graph api v1.0 endpoint
   $body = @{
-    filter = "userType eq 'Guest' and ExternalUserState eq 'Accepted'"
+    filter = "userType eq 'Guest' and externalUserState eq 'Accepted'"
     select = "id,displayName,mail,externalUserState,externalUserStateChangeDateTime"
   } | ConvertTo-Json
   $uri = "https://graph.microsoft.com/v1.0/users"
@@ -47,16 +47,16 @@ Function Get-MgGuestUserLastSignInDate {
     'All' {
       foreach ($i in $Id) {
         $body = @{
-          filter  = "userId eq '$i' and createdDateTime ge $Date"
+          filter  = "userId eq '$i'"
           OrderBy = "createdDateTime desc"
           Top     = 1
         }
         $uri = "https://graph.microsoft.com/v1.0/auditLogs/signIns"
         $SignInDate = (Invoke-MgGraphRequest -Method GET -Uri $uri -Body $body).value
         if ($SignInDate) {
-          $SignInDate | Select-Object -Property UserId, UserDisplayName, UserPrincipalname, CreatedDateTime | Export-Csv -Path $Path -Append -NoTypeInformation
+          $SignInDate |Where-Object{$_.CreatedDateTime -gt $Date} |Select-Object -Property UserId, UserDisplayName, UserPrincipalname, CreatedDateTime | Export-Csv -Path $Path -Append -NoTypeInformation
         }
-        elseIf ($null -eq $SignInDate) {
+        elseIf ($SignInDate) {
           Write-Output "No sign in date found for user $i">> $Path
           $SignInDate | Where-Object { $null -eq $_.CreatedDateTime } | Select-Object -Property UserId, UserDisplayName, UserPrincipalname, CreatedDateTime | Export-Csv -Path $Path -Append -NoTypeInformation
         }
