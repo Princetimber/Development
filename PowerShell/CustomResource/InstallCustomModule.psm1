@@ -1,4 +1,4 @@
-<#
+  <#
 .SYNOPSIS
   This function installs a custom module from the PowerShell Gallery
 .DESCRIPTION
